@@ -105,4 +105,6 @@ class AppController extends GetxController {
   void toProductDetail(String id) {
     Get.toNamed('/product_detail', arguments: id);
   }
+
+  void fetchNewUser() {}
 }
