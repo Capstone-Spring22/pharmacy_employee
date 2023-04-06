@@ -16,7 +16,7 @@ class ProductDetailScreen extends StatelessWidget {
     final id = Get.arguments;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Product Detail"),
+        title: const Text("Thông Tin Sản Phẩm"),
       ),
       body: FutureBuilder(
         builder: (context, snapshot) {
@@ -40,29 +40,29 @@ class ProductDetailScreen extends StatelessWidget {
                     ),
                   ),
                   ContentInfo(
-                    title: "Price",
+                    title: "Giá",
                     content: convertCurrency(product.price!),
                   ),
                   ContentInfo(
-                    title: "Unit",
+                    title: "Đơn Vị",
                     content: product.unitName!,
                   ),
                   ContentInfo(
-                    title: "Type",
+                    title: "Loại",
                     content: product.isPrescription!
-                        ? "Prescription"
-                        : "Non-Precription",
+                        ? "Thuốc Kê Đơn"
+                        : "Thuốc Không Kê Đơn",
                   ),
                   if (product.productUnitReferences!.isNotEmpty)
                     ContentInfo(
-                      title: "Other Units",
+                      title: "Các Đơn Vị Khác",
                       content: product.productUnitReferences!
                           .map((e) => e.unitName)
                           .join(", "),
                     ),
                   if (product.totalUnitOnly != null)
                     ContentInfo(
-                      title: "Category",
+                      title: "Danh Mục",
                       content: product.totalUnitOnly!,
                     ),
                   ...descriptionWidgets(product.descriptionModels!),
@@ -80,27 +80,27 @@ class ProductDetailScreen extends StatelessWidget {
     return [
       if (desc.effect != 'string')
         ContentInfo(
-          title: "Effect",
+          title: "Tác Dụng",
           content: desc.effect!,
         ),
       if (desc.instruction != 'string')
         ContentInfo(
-          title: "Instruction",
+          title: "Hướng Dẫn Sử Dụng",
           content: desc.instruction!,
         ),
       if (desc.sideEffect != 'string')
         ContentInfo(
-          title: "SideEffect",
+          title: "Tác Dụng Phụ",
           content: desc.sideEffect!,
         ),
       if (desc.contraindications != 'string')
         ContentInfo(
-          title: "Contraindications",
+          title: "Chống chỉ định",
           content: desc.contraindications!,
         ),
       if (desc.preserve != 'string')
         ContentInfo(
-          title: "Preserve",
+          title: "Bảo Quản",
           content: desc.preserve!,
         ),
       if (desc.ingredientModel!.isNotEmpty)

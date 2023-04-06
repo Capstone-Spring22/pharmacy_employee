@@ -1,11 +1,15 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pharmacy_employee/service/app_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,6 +23,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 SizedBox(
                   width: Get.width * .9,
+                  height: Get.height * .07,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -30,7 +35,7 @@ class HomeScreen extends StatelessWidget {
                           //   Get.log(
                           //       appController.pharmacist.value.token.toString());
                           // },
-                          onTap: () => AppService().fetchUnAcceptOrder(1),
+                          onTap: () {},
                           child: Image.asset(
                             'assets/icon.png',
                             height: Get.height * .15,
@@ -38,30 +43,17 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Column(
-                        children: [
-                          AnimatedTextKit(
-                            totalRepeatCount: 1,
-                            animatedTexts: [
-                              TypewriterAnimatedText(
-                                "Better Health",
-                                textStyle: TextStyle(
-                                  fontFamily: 'Quicksand',
-                                  letterSpacing: 4,
-                                  fontSize: 25,
-                                  color: context.theme.primaryColor,
-                                ),
-                              )
-                            ],
-                          ),
-                          AnimatedTextKit(
-                            totalRepeatCount: 1,
-                            animatedTexts: [
-                              TypewriterAnimatedText(
-                                "Better Health",
-                                textStyle: context.textTheme.headlineSmall!,
-                              )
-                            ],
+                      AnimatedTextKit(
+                        totalRepeatCount: 1,
+                        animatedTexts: [
+                          TypewriterAnimatedText(
+                            "Better Health",
+                            textStyle: TextStyle(
+                              fontFamily: 'Quicksand',
+                              letterSpacing: 4,
+                              fontSize: 25,
+                              color: context.theme.primaryColor,
+                            ),
                           )
                         ],
                       ),
@@ -87,7 +79,7 @@ class HomeScreen extends StatelessWidget {
                           color: Colors.white,
                         ),
                         Text(
-                          "Product Lookup",
+                          "Tìm Sản Phẩm",
                           style: TextStyle(color: Colors.white),
                         )
                       ],
@@ -113,7 +105,7 @@ class HomeScreen extends StatelessWidget {
                             color: Colors.white,
                           ),
                           Text(
-                            "Orders and Shipping",
+                            "Đơn Hàng",
                             style: TextStyle(color: Colors.white),
                           ),
                         ],
@@ -138,7 +130,7 @@ class HomeScreen extends StatelessWidget {
                             color: Colors.white,
                           ),
                           Text(
-                            "Pharmacist",
+                            "Nhân Viên",
                             style: TextStyle(color: Colors.white),
                           ),
                         ],

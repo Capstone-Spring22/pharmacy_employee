@@ -7,6 +7,7 @@ import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/controller/app_controller.dart';
 import 'package:pharmacy_employee/helpers/input.dart';
 import 'package:pharmacy_employee/helpers/loading.dart';
+import 'package:pharmacy_employee/main.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 class ProductLookup extends StatefulWidget {
@@ -31,7 +32,7 @@ class _ProductLookupState extends State<ProductLookup> {
     scrollController.addListener(() {
       if (scrollController.position.pixels ==
           scrollController.position.maxScrollExtent) {
-        if (appController.haveNext.isTrue) {
+        if (appController.productHaveNext.isTrue) {
           currentIndex++;
           appController.initLookup(searchTerm, currentIndex);
         }
@@ -52,7 +53,7 @@ class _ProductLookupState extends State<ProductLookup> {
       appBar: AppBar(
         title: Input(
           inputController: appController.searchController,
-          title: "Search",
+          title: "Tìm",
           focus: focusNode,
           onChanged: (v) => debouncer(() {
             searchTerm = v;
@@ -83,37 +84,72 @@ class _ProductLookupState extends State<ProductLookup> {
       ),
       body: GetX<AppController>(
         builder: (controller) {
-          if (controller.isSearching.isTrue) {
+          if (controller.isLoading.isTrue && controller.productList.isEmpty) {
             return Center(
               child: LoadingWidget(
                 size: 60,
               ),
             );
-          } else if (controller.list.isEmpty) {
+          } else if (controller.isLoading.isFalse &&
+              controller.productList.isEmpty) {
             return const Center(
-              child: Text("No Product Found"),
+              child: Text("Không Tìm Thấy Sản Phẩm Nào"),
             );
           } else {
             return ListView.builder(
               shrinkWrap: true,
               controller: scrollController,
-              itemCount: controller.list.length,
+              itemCount: controller.productList.length + 1,
               itemBuilder: (context, index) {
-                final item = controller.list[index];
-                // item.
-                return ListTile(
-                  onTap: () => appController.toProductDetail(item.id!),
-                  leading: CachedNetworkImage(
-                    imageUrl: item.imageModel!.imageURL!,
-                    height: 100,
-                    width: 50,
-                    placeholder: (context, url) => Center(
-                      child: LoadingWidget(),
+                if (index < controller.productList.length) {
+                  final item = controller.productList[index];
+                  // item.
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.grey,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ListTile(
+                        onTap: () => appController.toProductDetail(item.id!),
+                        leading: CachedNetworkImage(
+                          imageUrl: item.imageModel!.imageURL!,
+                          height: 100,
+                          width: 50,
+                          placeholder: (context, url) => Center(
+                            child: LoadingWidget(),
+                          ),
+                        ),
+                        title: AutoSizeText(
+                          item.name!,
+                          style: TextStyle(
+                            fontSize: appController.fontSize.value,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: item.productUnitReferences!
+                              .map(
+                                (e) => Text(
+                                  "${e.price != e.priceAfterDiscount ? e.price!.convertCurrentcy() : ''} - ${e.priceAfterDiscount!.convertCurrentcy()} / ${e.unitName}",
+                                  style: TextStyle(
+                                    fontSize: appController.fontSize.value,
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
                     ),
-                  ),
-                  title: AutoSizeText(item.name!),
-                  subtitle: Text(item.price.toString()),
-                );
+                  );
+                } else if (controller.isLoading.isTrue) {
+                  return LoadingWidget();
+                } else {
+                  return const SizedBox();
+                }
               },
             );
           }

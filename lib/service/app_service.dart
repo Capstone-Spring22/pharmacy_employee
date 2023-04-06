@@ -42,19 +42,19 @@ class AppService {
     }
   }
 
-  Future fetchUnAcceptOrder(int page) async {
+  Future fetchOrder(int page, bool isAccept, {int count = 10}) async {
     try {
       var res = await dio.get(
         '$api/Order',
         queryParameters: {
+          'NotAcceptable': isAccept,
           'pageIndex': page,
-          'pageItems': 10,
+          'pageItems': count,
         },
         options: appController.options,
       );
 
       if (res.statusCode == 200) {
-        Get.log(res.data.toString());
         return res.data;
       } else {
         return null;
@@ -88,7 +88,40 @@ class AppService {
 
   Future fetchProductDetail(String id) async {
     try {
-      var res = await dio.get('$api/Product/View/$id');
+      var res = await dio.get('$api/Product/View/$id',
+          options: appController.options);
+
+      if (res.statusCode == 200) {
+        return res.data;
+      } else {
+        return null;
+      }
+    } on DioError catch (e) {
+      Get.log(e.response.toString());
+    }
+  }
+
+  Future fetchOrderDetail(String id) async {
+    try {
+      var res = await dio.get('$api/Order/$id', options: appController.options);
+
+      if (res.statusCode == 200) {
+        return res.data;
+      } else {
+        return null;
+      }
+    } on DioError catch (e) {
+      Get.log(e.response.toString());
+    }
+  }
+
+  Future fetchOrderStatus(num id) async {
+    try {
+      var res = await dio.get('$api/OrderStatus',
+          queryParameters: {
+            'OrderTypeId': id,
+          },
+          options: appController.options);
 
       if (res.statusCode == 200) {
         return res.data;

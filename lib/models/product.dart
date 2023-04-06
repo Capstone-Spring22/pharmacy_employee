@@ -1,6 +1,7 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:pharmacy_employee/models/discount.dart';
-import 'package:pharmacy_employee/models/image.dart';
+import 'package:pharmacy_employee/models/product_detail.dart';
+
+import 'discount.dart';
+import 'image.dart';
 
 class PharmacyProduct {
   String? id;
@@ -21,6 +22,7 @@ class PharmacyProduct {
   String? barCode;
   ImageModel? imageModel;
   DiscountModel? discountModel;
+  List<ProductUnitReferences>? productUnitReferences;
 
   PharmacyProduct(
       {this.id,
@@ -40,6 +42,7 @@ class PharmacyProduct {
       this.isSell,
       this.barCode,
       this.imageModel,
+      this.productUnitReferences,
       this.discountModel});
 
   PharmacyProduct.fromJson(Map<String, dynamic> json) {
@@ -62,6 +65,12 @@ class PharmacyProduct {
     imageModel = json['imageModel'] != null
         ? ImageModel.fromJson(json['imageModel'])
         : null;
+    if (json['productUnitReferences'] != null) {
+      productUnitReferences = <ProductUnitReferences>[];
+      json['productUnitReferences'].forEach((v) {
+        productUnitReferences!.add(ProductUnitReferences.fromJson(v));
+      });
+    }
     discountModel = json['discountModel'] != null
         ? DiscountModel.fromJson(json['discountModel'])
         : null;

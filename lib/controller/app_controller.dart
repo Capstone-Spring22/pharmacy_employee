@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:pharmacy_employee/models/order.dart';
 import 'package:pharmacy_employee/models/product.dart';
 import 'package:pharmacy_employee/service/app_service.dart';
 import 'package:system_alert_window/system_alert_window.dart';
@@ -37,15 +38,21 @@ class AppController extends GetxController {
 
   Rx<Pharmacist> pharmacist = Pharmacist().obs;
 
-  RxList<PharmacyProduct> list = <PharmacyProduct>[].obs;
+  RxList<PharmacyProduct> productList = <PharmacyProduct>[].obs;
+  RxList<OrderHistory> orderList = <OrderHistory>[].obs;
 
-  RxBool isSearching = false.obs;
-  RxBool haveNext = false.obs;
+  RxBool isLoading = false.obs;
+  RxBool productHaveNext = false.obs;
+  RxBool orderHaveNext = false.obs;
+
+  RxDouble fontSize = 18.0.obs;
 
   @override
   void onInit() {
     final box = GetStorage();
     final user = box.read('user');
+
+    fontSize.value = box.read('fontSize') ?? 18;
 
     ever(pharmacist, pharmacistState);
     if (user != null) {
@@ -59,6 +66,22 @@ class AppController extends GetxController {
       removeUserSetting();
     } else {
       setupUser();
+    }
+  }
+
+  void decreaseFontSize() {
+    if (fontSize.value > 12) {
+      fontSize.value--;
+      final box = GetStorage();
+      box.write('fontSize', fontSize.value);
+    }
+  }
+
+  void increaseFontSize() {
+    if (fontSize.value < 30) {
+      fontSize.value++;
+      final box = GetStorage();
+      box.write('fontSize', fontSize.value);
     }
   }
 
@@ -84,11 +107,11 @@ class AppController extends GetxController {
   }
 
   Future initLookup(String name, int page) async {
-    isSearching.value = true;
+    isLoading.value = true;
     final result = await AppService().lookupProduct(name, page);
-    list.clear();
+    productList.clear();
     for (final item in result['items']) {
-      list.add(PharmacyProduct.fromJson(item));
+      productList.add(PharmacyProduct.fromJson(item));
     }
     Map<String, dynamic> map = {
       "totalRecord": result['totalRecord'],
@@ -96,9 +119,9 @@ class AppController extends GetxController {
       "hasNextPage": result['hasNextPage'],
       "hasPreviousPage": result['hasPreviousPage']
     };
-    haveNext.value = result['hasNextPage'];
+    productHaveNext.value = result['hasNextPage'];
 
-    isSearching.value = false;
+    isLoading.value = false;
     return map;
   }
 
@@ -106,5 +129,25 @@ class AppController extends GetxController {
     Get.toNamed('/product_detail', arguments: id);
   }
 
-  void fetchNewUser() {}
+  Future initOrder(int page, bool isAccept, {bool isNew = false}) async {
+    isLoading.value = true;
+    final result = await AppService().fetchOrder(page, isAccept);
+    if (isNew) {
+      orderList.clear();
+    }
+    for (final item in result['items']) {
+      orderList.add(OrderHistory.fromJson(item));
+    }
+
+    Map<String, dynamic> map = {
+      "totalRecord": result['totalRecord'],
+      "totalPage": result['totalPage'],
+      "hasNextPage": result['hasNextPage'],
+      "hasPreviousPage": result['hasPreviousPage']
+    };
+    orderHaveNext.value = result['hasNextPage'];
+
+    isLoading.value = false;
+    return map;
+  }
 }

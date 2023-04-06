@@ -10,10 +10,6 @@ class IngredientsText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // return AutoSizeText(
-    //   "${ingre.ingredientName} ($contentString ${ingre.unitName})",
-    //   style: const TextStyle(color: Colors.blue),
-    // );
     String text = "";
     for (var element in ingre) {
       String contentString = element.content.toString();
@@ -29,7 +25,7 @@ class IngredientsText extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AutoSizeText(
-            "Ingredients:",
+            "Thành Phần:",
             style: context.textTheme.titleLarge,
           ),
           AutoSizeText(

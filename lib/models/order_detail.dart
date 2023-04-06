@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 class OrderHistoryDetail {
   String? id;
   String? pharmacistId;
@@ -15,7 +16,7 @@ class OrderHistoryDetail {
   String? createdDate;
   bool? needAcceptance;
   List<OrderProducts>? orderProducts;
-  String? actionStatus;
+  ActionStatus? actionStatus;
   OrderContactInfo? orderContactInfo;
   OrderPickUp? orderPickUp;
   OrderDelivery? orderDelivery;
@@ -64,7 +65,10 @@ class OrderHistoryDetail {
         orderProducts!.add(OrderProducts.fromJson(v));
       });
     }
-    actionStatus = json['actionStatus'];
+
+    actionStatus = json['actionStatus'] != null
+        ? ActionStatus.fromJson(json['actionStatus'])
+        : null;
     orderContactInfo = json['orderContactInfo'] != null
         ? OrderContactInfo.fromJson(json['orderContactInfo'])
         : null;
@@ -282,6 +286,28 @@ class OrderDelivery {
     data['fullyAddress'] = fullyAddress;
     data['shippingFee'] = shippingFee;
     data['addressId'] = addressId;
+    return data;
+  }
+}
+
+class ActionStatus {
+  bool? canAccept;
+  String? statusMessage;
+  List<String>? missingProducts;
+
+  ActionStatus({this.canAccept, this.statusMessage, this.missingProducts});
+
+  ActionStatus.fromJson(Map<String, dynamic> json) {
+    canAccept = json['canAccept'];
+    statusMessage = json['statusMessage'];
+    missingProducts = json['missingProducts'].cast<String>();
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['canAccept'] = canAccept;
+    data['statusMessage'] = statusMessage;
+    data['missingProducts'] = missingProducts;
     return data;
   }
 }

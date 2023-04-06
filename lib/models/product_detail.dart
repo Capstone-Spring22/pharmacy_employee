@@ -132,9 +132,17 @@ class ProductUnitReferences {
   String? unitName;
   num? unitLevel;
   num? quantitative;
+  num? price;
+  num? priceAfterDiscount;
 
   ProductUnitReferences(
-      {this.id, this.unitId, this.unitName, this.unitLevel, this.quantitative});
+      {this.id,
+      this.unitId,
+      this.unitName,
+      this.unitLevel,
+      this.quantitative,
+      this.price,
+      this.priceAfterDiscount});
 
   ProductUnitReferences.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -142,6 +150,8 @@ class ProductUnitReferences {
     unitName = json['unitName'];
     unitLevel = json['unitLevel'];
     quantitative = json['quantitative'];
+    price = json['price'];
+    priceAfterDiscount = json['priceAfterDiscount'];
   }
 
   Map<String, dynamic> toJson() {
@@ -151,6 +161,8 @@ class ProductUnitReferences {
     data['unitName'] = unitName;
     data['unitLevel'] = unitLevel;
     data['quantitative'] = quantitative;
+    data['price'] = price;
+    data['priceAfterDiscount'] = priceAfterDiscount;
     return data;
   }
 }
