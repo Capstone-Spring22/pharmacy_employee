@@ -46,6 +46,7 @@ class AppController extends GetxController {
   void onInit() {
     final box = GetStorage();
     final user = box.read('user');
+
     ever(pharmacist, pharmacistState);
     if (user != null) {
       pharmacist.value = Pharmacist.fromJson(user);
