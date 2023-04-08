@@ -12,19 +12,27 @@ class Input extends StatelessWidget {
   final Function(String)? onSubmit;
   final bool centerText;
   final TextInputAction? inputAction;
-  const Input(
-      {Key? key,
-      required this.inputController,
-      this.title,
-      this.onChanged,
-      this.focus,
-      this.inputType,
-      this.enabled = true,
-      this.hint,
-      this.inputAction,
-      this.centerText = false,
-      this.onSubmit})
-      : super(key: key);
+  final int? maxLines;
+  final bool expands;
+  final bool autofocus;
+  final double txtHeight;
+  const Input({
+    Key? key,
+    required this.inputController,
+    this.title,
+    this.onChanged,
+    this.focus,
+    this.inputType,
+    this.enabled = true,
+    this.hint,
+    this.inputAction,
+    this.centerText = false,
+    this.expands = false,
+    this.onSubmit,
+    this.txtHeight = 50,
+    this.autofocus = false,
+    this.maxLines = 1,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +45,7 @@ class Input extends StatelessWidget {
             height: 8,
           ),
           Container(
-            height: 50,
+            height: txtHeight,
             decoration: BoxDecoration(boxShadow: [
               BoxShadow(
                   offset: const Offset(12, 26),
@@ -49,12 +57,15 @@ class Input extends StatelessWidget {
               textInputAction: inputAction,
               focusNode: focus,
               enabled: enabled,
+              expands: expands,
               textAlign: centerText ? TextAlign.center : TextAlign.left,
               onSubmitted: onSubmit,
               controller: inputController,
               onChanged: onChanged,
               keyboardType: inputType ?? TextInputType.text,
               style: context.textTheme.bodyLarge,
+              maxLines: maxLines,
+              autofocus: autofocus,
               decoration: InputDecoration(
                 suffixIcon: IconButton(
                   onPressed: () {

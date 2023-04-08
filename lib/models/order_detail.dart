@@ -112,6 +112,11 @@ class OrderHistoryDetail {
     }
     return data;
   }
+
+  @override
+  String toString() {
+    return 'OrderHistoryDetail(id: $id, pharmacistId: $pharmacistId, orderTypeId: $orderTypeId, orderTypeName: $orderTypeName, siteId: $siteId, orderStatus: $orderStatus, orderStatusName: $orderStatusName, totalPrice: $totalPrice, usedPoint: $usedPoint, paymentMethodId: $paymentMethodId, paymentMethod: $paymentMethod, isPaid: $isPaid, note: $note, createdDate: $createdDate, needAcceptance: $needAcceptance, orderProducts: $orderProducts, actionStatus: $actionStatus, orderContactInfo: $orderContactInfo, orderPickUp: $orderPickUp, orderDelivery: $orderDelivery)';
+  }
 }
 
 class OrderProducts {
@@ -180,6 +185,11 @@ class OrderProducts {
     }
     return data;
   }
+
+  @override
+  String toString() {
+    return 'OrderProducts(id: $id, productId: $productId, imageUrl: $imageUrl, productName: $productName, isBatches: $isBatches, unitName: $unitName, quantity: $quantity, originalPrice: $originalPrice, discountPrice: $discountPrice, priceTotal: $priceTotal, productNoteFromPharmacist: $productNoteFromPharmacist, orderBatches: $orderBatches)';
+  }
 }
 
 class OrderBatches {
@@ -206,6 +216,11 @@ class OrderBatches {
     data['unitName'] = unitName;
     return data;
   }
+
+  @override
+  String toString() {
+    return 'OrderBatches(manufacturerDate: $manufacturerDate, expireDate: $expireDate, quantity: $quantity, unitName: $unitName)';
+  }
 }
 
 class OrderContactInfo {
@@ -228,6 +243,10 @@ class OrderContactInfo {
     data['email'] = email;
     return data;
   }
+
+  @override
+  String toString() =>
+      'OrderContactInfo(fullname: $fullname, phoneNumber: $phoneNumber, email: $email)';
 }
 
 class OrderPickUp {
@@ -247,6 +266,10 @@ class OrderPickUp {
     data['timePickUp'] = timePickUp;
     return data;
   }
+
+  @override
+  String toString() =>
+      'OrderPickUp(datePickUp: $datePickUp, timePickUp: $timePickUp)';
 }
 
 class OrderDelivery {
@@ -288,19 +311,29 @@ class OrderDelivery {
     data['addressId'] = addressId;
     return data;
   }
+
+  @override
+  String toString() {
+    return 'OrderDelivery(cityId: $cityId, districtId: $districtId, wardId: $wardId, homeNumber: $homeNumber, fullyAddress: $fullyAddress, shippingFee: $shippingFee, addressId: $addressId)';
+  }
 }
 
 class ActionStatus {
   bool? canAccept;
   String? statusMessage;
-  List<String>? missingProducts;
+  List<MissingProduct>? missingProducts;
 
   ActionStatus({this.canAccept, this.statusMessage, this.missingProducts});
 
   ActionStatus.fromJson(Map<String, dynamic> json) {
     canAccept = json['canAccept'];
     statusMessage = json['statusMessage'];
-    missingProducts = json['missingProducts'].cast<String>();
+    if (json['missingProducts'] != null) {
+      missingProducts = <MissingProduct>[];
+      json['missingProducts'].forEach((v) {
+        missingProducts!.add(MissingProduct.fromJson(v));
+      });
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -310,4 +343,37 @@ class ActionStatus {
     data['missingProducts'] = missingProducts;
     return data;
   }
+
+  @override
+  String toString() =>
+      'ActionStatus(canAccept: $canAccept, statusMessage: $statusMessage, missingProducts: $missingProducts)';
+}
+
+class MissingProduct {
+  String? productId;
+  num? quantity;
+  String? statusMessage;
+  MissingProduct({
+    this.productId,
+    this.quantity,
+    this.statusMessage,
+  });
+
+  MissingProduct.fromJson(Map<String, dynamic> json) {
+    productId = json['productId'];
+    quantity = json['quantity'];
+    statusMessage = json['statusMessage'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['productId'] = productId;
+    data['quantity'] = quantity;
+    data['statusMessage'] = statusMessage;
+    return data;
+  }
+
+  @override
+  String toString() =>
+      'MissingProduct(productId: $productId, quantity: $quantity, statusMessage: $statusMessage)';
 }

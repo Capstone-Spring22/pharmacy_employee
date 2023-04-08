@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_rx/src/rx_workers/utils/debouncer.dart';
-import 'package:pharmacy_employee/constant/controller.dart';
-import 'package:pharmacy_employee/controller/app_controller.dart';
-import 'package:pharmacy_employee/helpers/loading.dart';
-import 'package:pharmacy_employee/main.dart';
+import 'package:pharmacy_employee/views/order/order_tabview.dart';
+
+import '../../constant/controller.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({super.key});
@@ -13,148 +11,154 @@ class OrderScreen extends StatefulWidget {
   State<OrderScreen> createState() => _OrderScreenState();
 }
 
-class _OrderScreenState extends State<OrderScreen> {
-  int currentIndex = 1;
-  bool isAccept = true;
+class _OrderScreenState extends State<OrderScreen>
+    with SingleTickerProviderStateMixin {
+  int activeIndex = 1;
+  int unAcceptUndex = 1;
+  int cantIndex = 1;
+  Offset offset = const Offset(0, 0);
 
-  ScrollController scrollController = ScrollController();
+  ScrollController activeTabScroll = ScrollController();
+  ScrollController unAcceptTabScroll = ScrollController();
+  ScrollController cantAcceptTabScroll = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    appController.orderTabController =
+        TabController(length: 2, vsync: this).obs;
 
-    appController.initOrder(1, isAccept, isNew: true);
-    scrollController.addListener(() {
-      if (scrollController.position.pixels ==
-          scrollController.position.maxScrollExtent) {
-        if (appController.orderHaveNext.isTrue) {
-          currentIndex++;
-          appController.initOrder(currentIndex, isAccept);
+    //unaccept
+    appController.initOrder(1, true, 'unAccept', isNew: true);
+    //active
+    appController.initOrder(
+      1,
+      false,
+      'active',
+      isNew: true,
+      isOnlyPharmacist: true,
+    );
+    //cant accept
+    appController.initOrder(1, true, 'cantAccept', isNew: true);
+
+    activeTabScroll.addListener(() {
+      if (activeTabScroll.position.pixels ==
+          activeTabScroll.position.maxScrollExtent) {
+        if (appController.orderActiveHaveNext.isTrue) {
+          activeIndex++;
+          appController.initOrder(activeIndex, false, 'active');
         }
+      }
+    });
+
+    unAcceptTabScroll.addListener(() {
+      if (unAcceptTabScroll.position.pixels ==
+          unAcceptTabScroll.position.maxScrollExtent) {
+        if (appController.orderUnAcceptHaveNext.isTrue) {
+          unAcceptUndex++;
+          appController.initOrder(unAcceptUndex, true, 'unAccept');
+        }
+      }
+    });
+
+    cantAcceptTabScroll.addListener(() {
+      if (cantAcceptTabScroll.position.pixels ==
+          cantAcceptTabScroll.position.maxScrollExtent) {
+        if (appController.orderCantAcceptHaveNext.isTrue) {
+          cantIndex++;
+          appController.initOrder(cantIndex, true, 'cantAccept');
+        }
+      }
+    });
+
+    appController.orderTabController.value!.addListener(() {
+      if (appController.orderTabController.value!.index == 0) {
+        setState(() {
+          offset = const Offset(0, 0);
+        });
+      } else {
+        setState(() {
+          offset = const Offset(100, 0);
+        });
       }
     });
   }
 
-  final debouncer = Debouncer(delay: const Duration(milliseconds: 500));
+  @override
+  void dispose() {
+    appController.orderTabController = null.obs;
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    String dateRender = "";
     return WillPopScope(
       onWillPop: () async {
-        appController.orderList.clear();
-        appController.orderHaveNext.value = false;
+        appController.orderUnAcceptList.clear();
+        appController.orderActiveList.clear();
+        appController.orderCantAcceptList.clear();
+
+        appController.orderActiveHaveNext.value = false;
+        appController.orderCantAcceptHaveNext.value = false;
+        appController.orderUnAcceptHaveNext.value = false;
+
         appController.isLoading.value = false;
+        appController.isProcessMode.value = false;
 
         return true;
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Đơn Hàng"),
-          actions: [
-            Switch.adaptive(
-                value: isAccept,
-                onChanged: (v) {
-                  setState(() {
-                    isAccept = v;
-                  });
-                  appController.initOrder(1, isAccept, isNew: true);
-                })
-          ],
-        ),
-        body: GetX<AppController>(
-          builder: (controller) {
-            if (controller.isLoading.isTrue && controller.orderList.isEmpty) {
-              return Center(
-                child: LoadingWidget(
-                  size: 60,
+      child: Obx(
+        () => Scaffold(
+          appBar: AppBar(
+            title: const Text("Đơn hàng"),
+            bottom: TabBar(
+              controller: appController.orderTabController.value,
+              tabs: const [
+                Tab(text: "Đơn đã nhận"),
+                Tab(text: "Đơn cần xử lý"),
+              ],
+            ),
+            actions: [
+              if (appController.isProcessMode.isTrue)
+                TextButton(
+                  onPressed: () {},
+                  child: Text(
+                      "Thực hiện ${appController.orderProcessList.length} đơn"),
                 ),
-              );
-            } else if (controller.isLoading.isFalse &&
-                controller.orderList.isEmpty) {
-              return Center(
-                child: Text(
-                  "Không Tìm Thấy Đơn",
-                  style: TextStyle(fontSize: appController.fontSize.value),
-                ),
-              );
-            } else {
-              return ListView.builder(
-                shrinkWrap: true,
-                controller: scrollController,
-                itemCount: controller.orderList.length + 1,
-                itemBuilder: (context, index) {
-                  if (index < controller.orderList.length) {
-                    final item = controller.orderList[index];
-                    bool dif = dateRender == item.createdDate!.convertToDate;
-                    if (!dif) {
-                      dateRender = item.createdDate!.convertToDate;
-                    }
-                    return GestureDetector(
-                      onTap: () => Get.toNamed(
-                        '/order_detail',
-                        arguments: item.id,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (!dif)
-                              Text(
-                                dateRender,
-                                style: TextStyle(
-                                    fontSize: appController.fontSize.value),
-                              ),
-                            Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              padding: const EdgeInsets.all(10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Ngày Tạo: ${item.createdDate!.convertToDate}",
-                                    style: TextStyle(
-                                        fontSize: appController.fontSize.value),
-                                  ),
-                                  Text(
-                                    "Loại Đơn: ${item.orderTypeName}",
-                                    style: TextStyle(
-                                        fontSize: appController.fontSize.value),
-                                  ),
-                                  Text(
-                                    item.paymentMethod == "0"
-                                        ? "Hình thức thanh toán: Tiền mặt"
-                                        : "Hình thức thanh toán: Online",
-                                    style: TextStyle(
-                                        fontSize: appController.fontSize.value),
-                                  ),
-                                  Text(
-                                    "Tổng Tiền: ${item.totalPrice!.convertCurrentcy()}",
-                                    style: TextStyle(
-                                        fontSize: appController.fontSize.value),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  } else {
-                    if (controller.isLoading.isTrue) {
-                      return LoadingWidget();
+              AnimatedSlide(
+                duration: const Duration(milliseconds: 100),
+                offset: offset,
+                child: TextButton(
+                  onPressed: () {
+                    if (appController.isProcessMode.isTrue) {
+                      appController.isProcessMode.value = false;
                     } else {
-                      return const SizedBox();
+                      appController.isProcessMode.toggle();
                     }
-                  }
-                },
-              );
-            }
-          },
+                  },
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: appController.isProcessMode.isTrue
+                        ? const Text(
+                            "Đóng",
+                            style: TextStyle(color: Colors.red),
+                          )
+                        : Text(
+                            "Chọn đơn thực hiện",
+                            style: TextStyle(color: context.theme.primaryColor),
+                          ),
+                  ),
+                ),
+              )
+            ],
+          ),
+          body: TabBarView(
+            controller: appController.orderTabController.value,
+            children: [
+              OrderTabView(unAcceptTabScroll, 'active'),
+              OrderTabView(unAcceptTabScroll, 'unAccept'),
+            ],
+          ),
         ),
       ),
     );

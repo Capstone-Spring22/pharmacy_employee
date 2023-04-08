@@ -22,16 +22,21 @@ class _OrderDetailState extends State<OrderDetail> {
   List<Map<String, dynamic>> mapStatus = [];
 
   _fetchOrderDetail() async {
-    var res = await AppService().fetchOrderDetail(id);
-    order = OrderHistoryDetail.fromJson(res);
-    await AppService().fetchOrderStatus(order.orderTypeId!).then((value) {
-      for (final i in value) {
-        mapStatus.add({"id": i['orderStatusId'], "name": i['orderStatusName']});
-      }
-    });
-    setState(() {
-      isFetch = false;
-    });
+    try {
+      order = await AppService().fetchOrderDetail(id);
+
+      await AppService().fetchOrderStatus(order.orderTypeId!).then((value) {
+        for (final i in value) {
+          mapStatus
+              .add({"id": i['orderStatusId'], "name": i['orderStatusName']});
+        }
+      });
+      setState(() {
+        isFetch = false;
+      });
+    } catch (e) {
+      Get.log(e.toString());
+    }
   }
 
   @override
@@ -59,23 +64,36 @@ class _OrderDetailState extends State<OrderDetail> {
                     DetailContent(
                       title: "Tên Khách Hàng",
                       content: Text(
-                          style:
-                              TextStyle(fontSize: appController.fontSize.value),
-                          order.orderContactInfo!.fullname!),
+                        style:
+                            TextStyle(fontSize: appController.fontSize.value),
+                        order.orderContactInfo!.fullname ?? "Khách Vãng Lai",
+                      ),
+                    ),
+                    DetailContent(
+                      title: "Email",
+                      content: Text(
+                        style:
+                            TextStyle(fontSize: appController.fontSize.value),
+                        order.orderContactInfo!.email ?? "Không có email",
+                      ),
                     ),
                     DetailContent(
                       title: "Số Điện Thoại",
                       content: Text(
                           style:
                               TextStyle(fontSize: appController.fontSize.value),
-                          order.orderContactInfo!.phoneNumber!),
+                          order.orderContactInfo!.phoneNumber ??
+                              "Không có số điện thoại"),
                     ),
-                    DetailContent(
+                    if (order.pharmacistId != appController.pharmacist.value.id)
+                      DetailContent(
                         title: "Trạng Thái Thực Hiện",
                         content: Text(
-                            style: TextStyle(
-                                fontSize: appController.fontSize.value),
-                            order.actionStatus!.statusMessage!)),
+                          order.actionStatus!.statusMessage!,
+                          style:
+                              TextStyle(fontSize: appController.fontSize.value),
+                        ),
+                      ),
                     DetailContent(
                         title: "Ngày Tạo",
                         content: Text(
@@ -93,8 +111,10 @@ class _OrderDetailState extends State<OrderDetail> {
                       content: Text(
                         mapStatus.singleWhere((element) =>
                             element['id'] == order.orderStatus!)['name'],
-                        style:
-                            TextStyle(fontSize: appController.fontSize.value),
+                        style: TextStyle(
+                          fontSize: appController.fontSize.value,
+                          color: context.theme.primaryColor,
+                        ),
                       ),
                     ),
                     DetailContent(
@@ -169,7 +189,7 @@ class _OrderDetailState extends State<OrderDetail> {
                               subtitle: Text(
                                 style: TextStyle(
                                     fontSize: appController.fontSize.value),
-                                "Số Lượng: ${order.orderProducts![index].quantity!}",
+                                "Số Lượng: ${order.orderProducts![index].quantity!} ${order.orderProducts![index].unitName}",
                               ),
                               trailing: Text(
                                 style: TextStyle(
@@ -181,29 +201,29 @@ class _OrderDetailState extends State<OrderDetail> {
                           },
                         ),
                       ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SwipeButton.expand(
-                        thumb: const Icon(
-                          Icons.double_arrow_rounded,
-                          color: Colors.white,
+                    // if (order.orderStatus == '6')
+                    //   FilledButton(
+                    //       onPressed: () {}, child: const Text("Chuẩn bị hàng")),
+                    if (order.pharmacistId == null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: SwipeButton.expand(
+                          enabled: order.actionStatus!.canAccept!,
+                          thumb: const Icon(
+                            Icons.double_arrow_rounded,
+                            color: Colors.white,
+                          ),
+                          activeThumbColor: context.theme.primaryColor,
+                          activeTrackColor: Colors.grey.shade300,
+                          onSwipe: () {
+                            Get.toNamed('/order_confirm', arguments: order.id);
+                          },
+                          child: Text(
+                            "Xác Nhận Đơn Hàng",
+                            style: context.textTheme.headlineSmall,
+                          ),
                         ),
-                        activeThumbColor: context.theme.primaryColor,
-                        activeTrackColor: Colors.grey.shade300,
-                        onSwipe: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Swipped"),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        },
-                        child: Text(
-                          "Nhận Đơn",
-                          style: context.textTheme.headlineMedium,
-                        ),
-                      ),
-                    )
+                      )
                   ],
                 ),
               ),

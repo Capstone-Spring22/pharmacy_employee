@@ -41,12 +41,15 @@ dependencies:
   flutter_login: ^4.1.1
   flutter_polyline_points: ^1.0.0
   flutter_swipe_button: ^2.1.1+1
+  geocoding: ^2.1.0
+  geolocator: ^9.0.2
   get: ^4.6.5
   get_storage: ^2.1.1
   google_maps_flutter: ^2.2.3
   intl: ^0.18.0
   loading_animation_widget: ^1.2.0+4
   location: ^4.4.0
+  open_route_service: ^1.2.2
   permission_handler: ^10.2.0
   simple_barcode_scanner: ^0.0.8
   system_alert_window: ^1.2.1

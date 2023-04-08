@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/controller/app_controller.dart';
 import 'package:pharmacy_employee/isolate_manager.dart';
+import 'package:pharmacy_employee/views/confirm_order.dart/confirm_order.dart';
 import 'package:pharmacy_employee/views/debug/debug_screen.dart';
 import 'package:pharmacy_employee/views/home/home.dart';
 import 'package:pharmacy_employee/views/login/login.dart';
@@ -48,6 +49,8 @@ void main() async {
   await dotenv.load(fileName: "dotenv");
   await GetStorage.init();
   await initializeDateFormatting('vi_VN', null);
+
+  SystemAlertWindow.requestPermissions;
   Get.put(AppController());
 
   await SystemAlertWindow.checkPermissions();
@@ -91,12 +94,17 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/home', page: () => const HomeScreen()),
         GetPage(name: '/lookup', page: () => const ProductLookup()),
         GetPage(name: '/map', page: () => const MapScreen()),
-        GetPage(name: '/order', page: () => const OrderScreen()),
+        GetPage(
+          name: '/order_view',
+          page: () => const OrderScreen(),
+        ),
         GetPage(name: '/debug', page: () => const DebugScreen()),
         GetPage(name: '/overlay', page: () => const OverLayScreen()),
         GetPage(name: '/login', page: () => const LoginScreen()),
         GetPage(name: '/user', page: () => const UserScreen()),
+        GetPage(name: '/user', page: () => const UserScreen()),
         GetPage(name: '/order_detail', page: () => const OrderDetail()),
+        GetPage(name: '/order_confirm', page: () => const ConfirmOrderScreen()),
         GetPage(
           name: '/product_detail',
           page: () => const ProductDetailScreen(),

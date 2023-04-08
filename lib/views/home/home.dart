@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 InkWell(
-                  onTap: () => Get.toNamed("/order"),
+                  onTap: () => Get.toNamed("/order_view"),
                   child: Container(
                       width: Get.width * 0.6,
                       height: Get.height * 0.2,
