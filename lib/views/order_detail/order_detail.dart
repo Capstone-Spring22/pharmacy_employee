@@ -23,7 +23,7 @@ class _OrderDetailState extends State<OrderDetail> {
 
   _fetchOrderDetail() async {
     try {
-      order = await AppService().fetchOrderDetail(id);
+      order = (await AppService().fetchOrderDetail(id))!;
 
       await AppService().fetchOrderStatus(order.orderTypeId!).then((value) {
         for (final i in value) {
@@ -69,14 +69,16 @@ class _OrderDetailState extends State<OrderDetail> {
                         order.orderContactInfo!.fullname ?? "Khách Vãng Lai",
                       ),
                     ),
-                    DetailContent(
-                      title: "Email",
-                      content: Text(
-                        style:
-                            TextStyle(fontSize: appController.fontSize.value),
-                        order.orderContactInfo!.email ?? "Không có email",
+                    if (order.orderContactInfo!.email != null &&
+                        order.orderContactInfo!.email!.isNotEmpty)
+                      DetailContent(
+                        title: "Email",
+                        content: Text(
+                          style:
+                              TextStyle(fontSize: appController.fontSize.value),
+                          order.orderContactInfo!.email ?? "Không có email",
+                        ),
                       ),
-                    ),
                     DetailContent(
                       title: "Số Điện Thoại",
                       content: Text(
@@ -223,7 +225,42 @@ class _OrderDetailState extends State<OrderDetail> {
                             style: context.textTheme.headlineSmall,
                           ),
                         ),
-                      )
+                      ),
+                    if (order.orderStatus == "9")
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: SwipeButton.expand(
+                          thumb: const Icon(
+                            Icons.double_arrow_rounded,
+                            color: Colors.white,
+                          ),
+                          activeThumbColor: context.theme.primaryColor,
+                          activeTrackColor: Colors.grey.shade300,
+                          onSwipe: () async {
+                            showDialog(
+                              context: context,
+                              builder: (context) => Center(
+                                child: LoadingWidget(
+                                  size: 60,
+                                ),
+                              ),
+                            );
+                            await appController
+                                .updateOrderStatus(
+                                    orderId: order.id!, status: "4")
+                                .then((value) async {
+                              await appController.triggerOrderLoad();
+
+                              Get.back();
+                              Get.back();
+                            });
+                          },
+                          child: Text(
+                            "Khách đã nhận hàng, hoàn thành đơn",
+                            style: context.textTheme.titleSmall,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

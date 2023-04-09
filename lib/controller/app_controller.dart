@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:open_route_service/open_route_service.dart';
+import 'package:pharmacy_employee/main.dart';
 import 'package:pharmacy_employee/models/order.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
 import 'package:pharmacy_employee/models/product.dart';
@@ -65,6 +66,7 @@ class AppController extends GetxController {
   RxBool orderUnAcceptHaveNext = false.obs;
   RxBool orderActiveHaveNext = false.obs;
   RxBool orderCantAcceptHaveNext = false.obs;
+  RxString orderType = "".obs;
 
   Rx<TabController?> orderTabController = null.obs;
 
@@ -152,6 +154,23 @@ class AppController extends GetxController {
 
   void toProductDetail(String id) {
     Get.toNamed('/product_detail', arguments: id);
+  }
+
+  Future triggerOrderLoad() async {
+    Future.wait([
+      //unaccept
+      initOrder(1, true, 'unAccept', isNew: true),
+      //active
+      initOrder(
+        1,
+        false,
+        'active',
+        isNew: true,
+        isOnlyPharmacist: true,
+      ),
+      //cant accept
+      initOrder(1, true, 'cantAccept', isNew: true),
+    ]);
   }
 
   Future initOrder(
@@ -271,9 +290,21 @@ class AppController extends GetxController {
           columns: [
             EachColumn(
               text: SystemWindowText(
-                  text: "An Toàn, Thượng Lộ Bình An",
-                  fontSize: 12,
-                  textColor: Colors.black45),
+                  text:
+                      "Số tiền cần thu: ${order.totalPrice!.convertCurrentcy()}",
+                  fontSize: 20,
+                  textColor: Colors.black),
+            ),
+          ],
+          gravity: ContentGravity.CENTER,
+        ),
+        EachRow(
+          columns: [
+            EachColumn(
+              text: SystemWindowText(
+                  text: "Tổng số lượng hàng: ${order.orderProducts!.length}",
+                  fontSize: 20,
+                  textColor: Colors.black),
             ),
           ],
           gravity: ContentGravity.CENTER,
@@ -338,9 +369,10 @@ class AppController extends GetxController {
       buttonsPosition: ButtonPosition.CENTER,
     );
     SystemAlertWindow.showSystemWindow(
-      height: (Get.height * .2).toInt(),
+      height: (Get.height * .275).toInt(),
       header: header,
       footer: footer,
+      body: body,
       margin: SystemWindowMargin(
         left: 8,
         right: 8,
@@ -365,6 +397,18 @@ class AppController extends GetxController {
       Get.log(res.toString());
     } catch (e) {
       Get.log("Validate order error: $e");
+    }
+  }
+
+  Future updateOrderStatus(
+      {required String orderId,
+      required String status,
+      String desc = ""}) async {
+    try {
+      var res = await AppService().updateOrderStatus(orderId, status, desc);
+      Get.log(res.toString());
+    } catch (e) {
+      Get.log("Update order status error: $e");
     }
   }
 }

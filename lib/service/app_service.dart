@@ -104,13 +104,14 @@ class AppService {
     }
   }
 
-  Future fetchOrderDetail(String id) async {
+  Future<OrderHistoryDetail?> fetchOrderDetail(String id) async {
     try {
       var res = await dio.get('$api/Order/$id', options: appController.options);
       return OrderHistoryDetail.fromJson(res.data);
     } on DioError catch (e) {
       Get.log(e.response.toString());
     }
+    return null;
   }
 
   Future fetchOrderStatus(num id) async {
@@ -169,6 +170,23 @@ class AppService {
       return res.statusCode;
     } on DioError catch (e) {
       Get.log("Response: ${e.response!.data.toString()}");
+    }
+  }
+
+  Future updateOrderStatus(String id, String statusId, String desc) async {
+    try {
+      var res = await dio.put(
+        '${api}Order/ExecuteOrder',
+        options: appController.options,
+        data: {
+          "orderId": id,
+          "orderStatusId": statusId,
+          "description": desc,
+        },
+      );
+      return res.statusCode;
+    } on DioError catch (e) {
+      Get.log(e.response!.statusMessage.toString());
     }
   }
 }

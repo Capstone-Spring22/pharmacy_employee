@@ -50,6 +50,25 @@ class _ProductLookupState extends State<ProductLookup> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          var res = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SimpleBarcodeScannerPage(),
+              ));
+          setState(() {
+            if (res is String) {
+              if (res != "-1") {
+                searchTerm = res;
+                appController.searchController.text = res;
+                appController.initLookup(res, 1);
+              }
+            }
+          });
+        },
+        child: const Icon(Icons.barcode_reader),
+      ),
       appBar: AppBar(
         title: Input(
           inputController: appController.searchController,
@@ -60,27 +79,7 @@ class _ProductLookupState extends State<ProductLookup> {
             appController.initLookup(v, 1);
           }),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.barcode_reader),
-            onPressed: () async {
-              var res = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SimpleBarcodeScannerPage(),
-                  ));
-              setState(() {
-                if (res is String) {
-                  if (res != "-1") {
-                    searchTerm = res;
-                    appController.searchController.text = res;
-                    appController.initLookup(res, 1);
-                  }
-                }
-              });
-            },
-          ),
-        ],
+        actions: const [],
       ),
       body: GetX<AppController>(
         builder: (controller) {

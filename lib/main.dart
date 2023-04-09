@@ -20,6 +20,8 @@ import 'package:pharmacy_employee/views/order/order.dart';
 import 'package:pharmacy_employee/views/order_detail/order_detail.dart';
 import 'package:pharmacy_employee/views/overlay/btn_tag.dart';
 import 'package:pharmacy_employee/views/overlay/overlay.dart';
+import 'package:pharmacy_employee/views/prep_order.dart/prep_order.dart';
+import 'package:pharmacy_employee/views/prep_pickup/prep_pickup.dart';
 import 'package:pharmacy_employee/views/product_detail/product_detail.dart';
 import 'package:pharmacy_employee/views/user/user.dart';
 import 'package:system_alert_window/system_alert_window.dart';
@@ -27,6 +29,17 @@ import 'package:system_alert_window/system_alert_window.dart';
 extension DateFormatter on String {
   String get convertToDate {
     return DateFormat.yMMMMd('vi_VN').format(DateTime.parse(this));
+  }
+}
+
+extension DoubleExtensions on int {
+  String toKilometers() {
+    if (this < 1000) {
+      return '${toStringAsFixed(0)}m';
+    } else {
+      double distanceInKm = this / 1000;
+      return '${distanceInKm.toStringAsFixed(2)}km';
+    }
   }
 }
 
@@ -99,10 +112,11 @@ class MyApp extends StatelessWidget {
           page: () => const OrderScreen(),
         ),
         GetPage(name: '/debug', page: () => const DebugScreen()),
+        GetPage(name: '/prep_order', page: () => const PrepOrder()),
         GetPage(name: '/overlay', page: () => const OverLayScreen()),
         GetPage(name: '/login', page: () => const LoginScreen()),
         GetPage(name: '/user', page: () => const UserScreen()),
-        GetPage(name: '/user', page: () => const UserScreen()),
+        GetPage(name: '/prep_pickup', page: () => const PrepPickUpScreen()),
         GetPage(name: '/order_detail', page: () => const OrderDetail()),
         GetPage(name: '/order_confirm', page: () => const ConfirmOrderScreen()),
         GetPage(

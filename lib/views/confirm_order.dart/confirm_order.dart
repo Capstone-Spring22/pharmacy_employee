@@ -26,7 +26,7 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
   fetchData() async {
     var res = await AppService().fetchOrderDetail(Get.arguments);
     setState(() {
-      order = res;
+      order = res!;
       isLoading = false;
     });
   }
@@ -91,21 +91,36 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                         : context.theme.colorScheme.error,
                     activeTrackColor: Colors.grey.shade300,
                     onSwipe: () async {
+                      Get.dialog(Center(
+                        child: SizedBox(
+                          height: Get.height * 4,
+                          width: Get.height * 5,
+                          child: LoadingWidget(
+                            size: 60,
+                          ),
+                        ),
+                      ));
                       if (isAccept) {
                         await appController
                             .validateOrder(
-                              isAccept: true,
-                              orderId: order.id!,
-                            )
-                            .then((value) => showComebackOrProcess());
+                          isAccept: true,
+                          orderId: order.id!,
+                        )
+                            .then((value) async {
+                          await appController.triggerOrderLoad();
+                          showComebackOrProcess();
+                        });
                       } else {
                         await appController
                             .validateOrder(
-                              isAccept: false,
-                              orderId: order.id!,
-                              desc: inputController.text,
-                            )
-                            .then((value) => showComebackOrProcess());
+                          isAccept: false,
+                          orderId: order.id!,
+                          desc: inputController.text,
+                        )
+                            .then((value) async {
+                          await appController.triggerOrderLoad();
+                          showComebackOrProcess();
+                        });
                       }
                     },
                     child: Text(
@@ -133,14 +148,20 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
       cancelTextColor: context.theme.primaryColorDark,
       onCancel: () {
         appController.orderTabController.value!.animateTo(0);
-        Get.back();
-        Get.back();
-        Get.back();
+        Get
+          ..back()
+          ..back()
+          ..back()
+          ..back()
+          ..back();
       },
       onConfirm: () {
-        Get.back();
-        Get.back();
-        Get.back();
+        Get
+          ..back()
+          ..back()
+          ..back()
+          ..back()
+          ..back();
       },
     );
   }
@@ -167,13 +188,16 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                             TextStyle(fontSize: appController.fontSize.value),
                         order.orderContactInfo!.fullname!),
                   ),
-                  DetailContent(
-                    title: "Email",
-                    content: Text(
-                      style: TextStyle(fontSize: appController.fontSize.value),
-                      order.orderContactInfo!.email ?? "Không có email",
+                  if (order.orderContactInfo!.email != null &&
+                      order.orderContactInfo!.email!.isNotEmpty)
+                    DetailContent(
+                      title: "Email",
+                      content: Text(
+                        style:
+                            TextStyle(fontSize: appController.fontSize.value),
+                        order.orderContactInfo!.email ?? "Không có email",
+                      ),
                     ),
-                  ),
                   GestureDetector(
                     onTap: () async => await launchUrl(Uri.parse(
                         "tel://${order.orderContactInfo!.phoneNumber}")),
@@ -211,6 +235,7 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                     ),
                   ),
                   ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
                       return Column(
                         children: [

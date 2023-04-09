@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pharmacy_employee/views/order/order_tabview.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 import '../../constant/controller.dart';
 
@@ -28,18 +29,7 @@ class _OrderScreenState extends State<OrderScreen>
     appController.orderTabController =
         TabController(length: 2, vsync: this).obs;
 
-    //unaccept
-    appController.initOrder(1, true, 'unAccept', isNew: true);
-    //active
-    appController.initOrder(
-      1,
-      false,
-      'active',
-      isNew: true,
-      isOnlyPharmacist: true,
-    );
-    //cant accept
-    appController.initOrder(1, true, 'cantAccept', isNew: true);
+    appController.triggerOrderLoad();
 
     activeTabScroll.addListener(() {
       if (activeTabScroll.position.pixels ==
@@ -109,6 +99,23 @@ class _OrderScreenState extends State<OrderScreen>
       },
       child: Obx(
         () => Scaffold(
+          floatingActionButton: FloatingActionButton(
+            onPressed: () async {
+              var res = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SimpleBarcodeScannerPage(),
+                  ));
+              setState(() {
+                if (res is String) {
+                  if (res != "-1") {
+                    Get.toNamed('/order_detail', arguments: res);
+                  }
+                }
+              });
+            },
+            child: const Icon(Icons.barcode_reader),
+          ),
           appBar: AppBar(
             title: const Text("Đơn hàng"),
             bottom: TabBar(
@@ -121,7 +128,16 @@ class _OrderScreenState extends State<OrderScreen>
             actions: [
               if (appController.isProcessMode.isTrue)
                 TextButton(
-                  onPressed: () {},
+                  onPressed: appController.orderProcessList.isEmpty
+                      ? null
+                      : () {
+                          if (appController.orderType.value ==
+                              "Giao hàng tận nơi") {
+                            Get.toNamed('/prep_order');
+                          } else {
+                            Get.toNamed('/prep_pickup');
+                          }
+                        },
                   child: Text(
                       "Thực hiện ${appController.orderProcessList.length} đơn"),
                 ),

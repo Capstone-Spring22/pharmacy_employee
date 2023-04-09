@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_rx/src/rx_workers/utils/debouncer.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/controller/app_controller.dart';
 import 'package:pharmacy_employee/helpers/loading.dart';
 import 'package:pharmacy_employee/main.dart';
 import 'package:pharmacy_employee/models/order.dart';
 
-class OrderTabView extends StatelessWidget {
+class OrderTabView extends StatefulWidget {
   const OrderTabView(this.scrollController, this.type, {super.key});
 
   final ScrollController scrollController;
   final String type;
 
   @override
+  State<OrderTabView> createState() => _OrderTabViewState();
+}
+
+class _OrderTabViewState extends State<OrderTabView> {
+  List<String> viewType = ["2", "3", "4", "9", "6", "7", "8", "10"];
+  @override
   Widget build(BuildContext context) {
-    final debouncer = Debouncer(delay: const Duration(milliseconds: 500));
     String dateRender = "";
     bool isLoading = true;
     return GetX<AppController>(
       builder: (controller) {
         List<OrderHistory> list() {
-          if (type == 'unAccept') {
+          if (widget.type == 'unAccept') {
             isLoading = controller.isUnAcceptLoading.value;
             return controller.orderUnAcceptList;
-          } else if (type == 'active') {
+          } else if (widget.type == 'active') {
             isLoading = controller.isActiveLoading.value;
             return controller.orderActiveList;
           } else {
@@ -51,7 +55,7 @@ class OrderTabView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: ListView.builder(
               shrinkWrap: true,
-              controller: scrollController,
+              controller: widget.scrollController,
               itemCount: list().length + 1,
               itemBuilder: (context, index) {
                 if (index < list().length) {
@@ -60,6 +64,12 @@ class OrderTabView extends StatelessWidget {
                   if (!dif) {
                     dateRender = item.createdDate!.convertToDate;
                   }
+
+                  if (item.orderStatus == '8' &&
+                      appController.isProcessMode.isTrue) {
+                    return Container();
+                  }
+
                   return GestureDetector(
                     onTap: () => Get.toNamed(
                       '/order_detail',
@@ -83,16 +93,50 @@ class OrderTabView extends StatelessWidget {
                               onChanged: (value) {
                                 if (value!) {
                                   if (item.orderStatus == '11') {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      content: const Text(
-                                          "Không thể thực hiện đơn hàng bị huỷ/từ chối"),
+                                    Get.showSnackbar(GetSnackBar(
+                                      message:
+                                          "Không thể thực hiện đơn hàng bị huỷ/từ chối",
                                       backgroundColor:
                                           context.theme.colorScheme.error,
+                                      duration: const Duration(seconds: 2),
+                                    ));
+                                  } else if (item.orderStatus == '9') {
+                                    Get.showSnackbar(GetSnackBar(
+                                      message:
+                                          "Đơn hàng đã được chuẩn bị, hãy đợi khách đến nhận hàng",
+                                      backgroundColor:
+                                          context.theme.primaryColor,
+                                      duration: const Duration(seconds: 2),
+                                    ));
+                                  } else if (item.orderStatus == '8') {
+                                    Get.showSnackbar(GetSnackBar(
+                                      message:
+                                          "Đơn hàng đã được giao, không thể thực hiện",
+                                      backgroundColor:
+                                          context.theme.colorScheme.error,
+                                      duration: const Duration(seconds: 2),
                                     ));
                                   } else {
-                                    appController.orderProcessList
-                                        .add(item.id!);
+                                    if (appController
+                                        .orderProcessList.isEmpty) {
+                                      appController.orderType.value =
+                                          item.orderTypeName!;
+                                    }
+                                    if (item.orderTypeName !=
+                                        appController.orderType.value) {
+                                      Get.showSnackbar(
+                                        GetSnackBar(
+                                          message:
+                                              "Không thể thực hiện đơn hàng có loại khác nhau",
+                                          backgroundColor:
+                                              context.theme.colorScheme.error,
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                    } else {
+                                      appController.orderProcessList
+                                          .add(item.id!);
+                                    }
                                   }
                                 } else {
                                   appController.orderProcessList

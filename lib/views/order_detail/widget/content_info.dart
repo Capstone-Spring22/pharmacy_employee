@@ -3,17 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 
 class DetailContent extends StatelessWidget {
-  const DetailContent({super.key, required this.title, required this.content});
+  const DetailContent(
+      {super.key,
+      required this.title,
+      required this.content,
+      this.haveDivider = true,
+      this.zeroPadding = false});
 
   final String title;
   final Widget content;
+  final bool haveDivider;
+  final bool zeroPadding;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5),
+          padding: zeroPadding
+              ? EdgeInsets.zero
+              : const EdgeInsets.symmetric(vertical: 5),
           child: ListTile(
             title: AutoSizeText(
               title,
@@ -25,7 +34,7 @@ class DetailContent extends StatelessWidget {
             subtitle: content,
           ),
         ),
-        const Divider()
+        if (haveDivider) const Divider()
       ],
     );
   }
