@@ -3,11 +3,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:open_route_service/open_route_service.dart';
 import 'package:pharmacy_employee/main.dart';
 import 'package:pharmacy_employee/models/order.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
 import 'package:pharmacy_employee/models/product.dart';
+import 'package:pharmacy_employee/models/site.dart';
 import 'package:pharmacy_employee/service/app_service.dart';
 import 'package:pharmacy_employee/views/overlay/btn_tag.dart';
 import 'package:system_alert_window/system_alert_window.dart';
@@ -67,6 +69,7 @@ class AppController extends GetxController {
   RxBool orderActiveHaveNext = false.obs;
   RxBool orderCantAcceptHaveNext = false.obs;
   RxString orderType = "".obs;
+  RxList<Site> siteList = <Site>[].obs;
 
   Rx<TabController?> orderTabController = null.obs;
 
@@ -112,11 +115,16 @@ class AppController extends GetxController {
     }
   }
 
+  Site getSiteById(String id) {
+    return siteList.firstWhere((element) => element.id == id);
+  }
+
   setupUser() {
     isLogin.value = true;
     options = Options(headers: {
       'Authorization': 'Bearer ${pharmacist.value.token}',
     });
+    fetchAllSite();
     final box = GetStorage();
     box.write('user', pharmacist.value.toJson());
   }
@@ -131,6 +139,13 @@ class AppController extends GetxController {
   void logout() {
     pharmacist.value = Pharmacist();
     Get.offAllNamed('/login');
+  }
+
+  Map<String, dynamic> pharmaTokenDecode() =>
+      JwtDecoder.decode(pharmacist.value.token!);
+
+  Future fetchAllSite() async {
+    siteList.value = await AppService().fetchAllSite();
   }
 
   Future initLookup(String name, int page) async {
@@ -267,21 +282,12 @@ class AppController extends GetxController {
       ),
       padding: SystemWindowPadding.setSymmetricPadding(12, 12),
       subTitle: SystemWindowText(
-        text: "${order.orderDelivery!.homeNumber}",
+        text: "${order.orderDelivery!.fullyAddress}",
         fontSize: 20,
         fontWeight: FontWeight.BOLD,
         textColor: Colors.black87,
       ),
       decoration: SystemWindowDecoration(startColor: Colors.grey[100]),
-      // button: SystemWindowButton(
-      //   text: SystemWindowText(
-      //     text: "Gọi",
-      //     fontSize: 10,
-      //     textColor: Get.context!.theme.primaryColor,
-      //   ),
-      //   tag: "$callBtnTag-${order.orderContactInfo!.phoneNumber}",
-      // ),
-      // buttonPosition: ButtonPosition.TRAILING,
     );
 
     SystemWindowBody body = SystemWindowBody(

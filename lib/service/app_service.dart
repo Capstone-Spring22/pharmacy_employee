@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
 import 'package:pharmacy_employee/models/pharmacist.dart';
+import 'package:pharmacy_employee/models/site.dart';
 
 class AppService {
   final dio = appController.dio;
@@ -68,6 +69,20 @@ class AppService {
       if (e.response != null) {
         Get.log(e.response!.data.toString());
       }
+    }
+  }
+
+  Future<List<Site>> fetchAllSite() async {
+    var res = await dio
+        .get('$api/Site', options: appController.options, queryParameters: {
+      'pageIndex': 1,
+      'pageItems': 10,
+    });
+
+    if (res.statusCode == 200) {
+      return List<Site>.from(res.data['items'].map((e) => Site.fromJson(e)));
+    } else {
+      return [];
     }
   }
 
@@ -187,6 +202,18 @@ class AppService {
       return res.statusCode;
     } on DioError catch (e) {
       Get.log(e.response!.statusMessage.toString());
+    }
+  }
+
+  Future fetchSiteInfo(String id) async {
+    try {
+      var res = await dio.get(
+        '${api}Site/$id',
+        options: appController.options,
+      );
+      return res.data;
+    } on DioError catch (e) {
+      Get.log(e.response.toString());
     }
   }
 }

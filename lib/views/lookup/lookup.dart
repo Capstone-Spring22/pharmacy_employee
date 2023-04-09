@@ -133,7 +133,7 @@ class _ProductLookupState extends State<ProductLookup> {
                           children: item.productUnitReferences!
                               .map(
                                 (e) => Text(
-                                  "${e.price != e.priceAfterDiscount ? e.price!.convertCurrentcy() : ''} - ${e.priceAfterDiscount!.convertCurrentcy()} / ${e.unitName}",
+                                  "${e.price != e.priceAfterDiscount ? "Giá giảm ${e.priceAfterDiscount!.convertCurrentcy()} - " : ''}${e.price!.convertCurrentcy()} / ${e.unitName}",
                                   style: TextStyle(
                                     fontSize: appController.fontSize.value,
                                   ),

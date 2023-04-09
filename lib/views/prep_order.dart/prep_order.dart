@@ -21,7 +21,7 @@ class PrepOrder extends StatefulWidget {
 }
 
 class _PrepOrderState extends State<PrepOrder> {
-  List<int> finished = [];
+  List<String> finished = [];
   Position? currentPosition;
   bool isLoading = false;
   bool isTextAnimateComplete = false;
@@ -57,7 +57,7 @@ class _PrepOrderState extends State<PrepOrder> {
 
       currentPosition = await Geolocator.getCurrentPosition();
       for (var i = 0; i < appController.orderProcessList.length; i++) {
-        addressList.add(orderDetails[i]!.orderDelivery!.homeNumber!);
+        addressList.add(orderDetails[i]!.orderDelivery!.fullyAddress!);
       }
 
       List<List<Location>> locations =
@@ -88,7 +88,7 @@ class _PrepOrderState extends State<PrepOrder> {
     }
   }
 
-  finishOrder(int index) {
+  finishOrder(String index) {
     setState(() {
       finished.add(index);
       isCompletePrep = finished.length == totalProduct;
@@ -143,7 +143,7 @@ class _PrepOrderState extends State<PrepOrder> {
                         ),
                       ),
                       TypewriterAnimatedText(
-                        'Sắp xếp theo khoản cách',
+                        'Sắp xếp theo khoảng cách',
                         textStyle: const TextStyle(
                           fontSize: 25,
                           fontWeight: FontWeight.bold,
@@ -201,7 +201,7 @@ class _PrepOrderState extends State<PrepOrder> {
                               DetailContent(
                                 title: "Địa chỉ",
                                 content: AutoSizeText(
-                                  "${orderDetails[index]!.orderDelivery!.homeNumber}",
+                                  "${orderDetails[index]!.orderDelivery!.fullyAddress}",
                                 ),
                                 haveDivider: false,
                               ),
@@ -219,61 +219,73 @@ class _PrepOrderState extends State<PrepOrder> {
                                       .totalPrice!
                                       .convertCurrentcy(),
                                 ),
-                                haveDivider: false,
                               ),
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemBuilder: (context, i) {
-                                  return Container(
-                                    decoration: const BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey,
+                              DetailContent(
+                                title: "Danh sách sản phẩm",
+                                haveDivider: false,
+                                content: ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemBuilder: (context, i) {
+                                    return Container(
+                                      decoration: const BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    child: ListTile(
-                                      trailing: Checkbox(
-                                        value: finished.contains(index),
-                                        onChanged: (value) {
-                                          if (value!) {
-                                            setState(() {
-                                              finishOrder(index);
-                                            });
-                                          } else {
-                                            setState(() {
-                                              finished.remove(index);
-                                              isCompletePrep =
-                                                  finished.length ==
-                                                      totalProduct;
-                                            });
-                                          }
-                                        },
-                                      ),
-                                      title: Text(orderDetails[index]!
-                                          .orderProducts![i]
-                                          .productName!),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            "${orderDetails[index]!.orderProducts![i].quantity} ${orderDetails[index]!.orderProducts![i].unitName} - ${orderDetails[index]!.orderProducts![i].priceTotal!.convertCurrentcy()}",
-                                          ),
-                                          AutoSizeText(
-                                            orderDetails[index]!
+                                      child: ListTile(
+                                        trailing: Checkbox(
+                                          value: finished.contains(
+                                              orderDetails[index]!
+                                                  .orderProducts![i]
+                                                  .id),
+                                          onChanged: (value) {
+                                            if (value!) {
+                                              setState(() {
+                                                finishOrder(orderDetails[index]!
                                                     .orderProducts![i]
-                                                    .productNoteFromPharmacist ??
-                                                "",
-                                          )
-                                        ],
+                                                    .id!);
+                                              });
+                                            } else {
+                                              setState(() {
+                                                finished.remove(
+                                                    orderDetails[index]!
+                                                        .orderProducts![i]
+                                                        .id);
+                                                isCompletePrep =
+                                                    finished.length ==
+                                                        totalProduct;
+                                              });
+                                            }
+                                          },
+                                        ),
+                                        title: Text(orderDetails[index]!
+                                            .orderProducts![i]
+                                            .productName!),
+                                        subtitle: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "${orderDetails[index]!.orderProducts![i].quantity} ${orderDetails[index]!.orderProducts![i].unitName} - ${orderDetails[index]!.orderProducts![i].priceTotal!.convertCurrentcy()}",
+                                            ),
+                                            AutoSizeText(
+                                              orderDetails[index]!
+                                                      .orderProducts![i]
+                                                      .productNoteFromPharmacist ??
+                                                  "",
+                                            )
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
-                                itemCount:
-                                    orderDetails[index]!.orderProducts!.length,
+                                    );
+                                  },
+                                  itemCount: orderDetails[index]!
+                                      .orderProducts!
+                                      .length,
+                                ),
                               ),
                             ],
                           ),
@@ -296,6 +308,11 @@ class _PrepOrderState extends State<PrepOrder> {
                       activeThumbColor: context.theme.primaryColor,
                       activeTrackColor: Colors.grey.shade300,
                       onSwipe: () async {
+                        Get.dialog(Center(
+                          child: LoadingWidget(
+                            size: 60,
+                          ),
+                        ));
                         for (var e in orderDetails) {
                           await appController.updateOrderStatus(
                             orderId: e!.id!,

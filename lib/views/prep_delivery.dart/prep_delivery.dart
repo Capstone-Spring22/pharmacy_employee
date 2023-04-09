@@ -8,6 +8,7 @@ import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/helpers/loading.dart';
 import 'package:pharmacy_employee/main.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
+import 'package:pharmacy_employee/models/site.dart';
 import 'package:pharmacy_employee/views/order_detail/widget/content_info.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -38,6 +39,8 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
   Polyline? routePolyline;
   final Set<Marker> _markers = {};
   bool isQueryRoute = false;
+  bool isFinished = false;
+  bool isQueryRouteBack = false;
 
   @override
   void initState() {
@@ -46,6 +49,69 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     distance = widget.distance;
     addressList = widget.addressList;
     locationList = widget.locationList;
+  }
+
+  routeBackToSite() async {
+    setState(() {
+      isQueryRoute = true;
+    });
+    _markers.clear();
+    _markers.add(Marker(
+      markerId: const MarkerId('Vị trí hiện tại'),
+      position: LatLng(
+        widget.currentPosition.latitude,
+        widget.currentPosition.longitude,
+      ),
+      infoWindow: const InfoWindow(title: 'Vị trí hiện tại'),
+    ));
+    Site site =
+        appController.getSiteById(appController.pharmaTokenDecode()['SiteID']);
+
+    final listLatLng = await locationFromAddress(site.fullyAddress!);
+
+    _markers.add(Marker(
+      markerId: MarkerId(site.siteName!),
+      position: LatLng(
+        listLatLng.first.latitude,
+        listLatLng.first.longitude,
+      ),
+      infoWindow: InfoWindow(title: site.fullyAddress!),
+    ));
+
+    final route =
+        await appController.openrouteservice.directionsMultiRouteCoordsPost(
+      coordinates: [
+        ORSCoordinate(
+            latitude: widget.currentPosition.latitude,
+            longitude: widget.currentPosition.longitude),
+        ORSCoordinate(
+            latitude: listLatLng.first.latitude,
+            longitude: listLatLng.first.longitude),
+      ],
+      continueStraight: true,
+      geometry: true,
+      instructions: true,
+      profileOverride: ORSProfile.cyclingRoad,
+      units: 'm',
+    );
+
+    List<LatLng> routePoints = [];
+
+    for (var e in route) {
+      routePoints.add(LatLng(e.latitude, e.longitude));
+    }
+
+    setState(() {
+      routePolyline = Polyline(
+        polylineId: const PolylineId('route'),
+        visible: true,
+        points: routePoints,
+        color: context.theme.primaryColor,
+        width: 4,
+      );
+      isQueryRoute = false;
+      isQueryRouteBack = true;
+    });
   }
 
   getLocation() async {
@@ -64,10 +130,6 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     for (int i = 0; i < locationList.length; i++) {
       _markers.add(
         Marker(
-          // onTap: () => Get.toNamed(
-          //   '/order_detail',
-          //   arguments: orders[i]!.id,
-          // ),
           markerId: MarkerId(addressList[i]),
           position: LatLng(locationList[i].latitude, locationList[i].longitude),
           infoWindow: InfoWindow(
@@ -88,6 +150,11 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
               longitude: e.longitude,
             )),
       ],
+      continueStraight: true,
+      geometry: true,
+      instructions: true,
+      profileOverride: ORSProfile.cyclingRoad,
+      units: 'm',
     );
 
     List<LatLng> routePoints = [];
@@ -160,6 +227,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
           ),
           DraggableScrollableSheet(
             initialChildSize: 0.3,
+            snap: true,
             minChildSize: 0.2,
             maxChildSize: 0.8,
             builder: (context, scrollController) {
@@ -177,167 +245,211 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(top: 10),
-                        child: SizedBox(
-                          width: Get.width * .9,
-                          child: FilledButton(
-                            onPressed: () {
-                              getLocation();
-                            },
-                            child: AnimatedSwitcher(
-                              duration: 500.milliseconds,
-                              child: isQueryRoute
-                                  ? LoadingWidget()
-                                  : const Text("Tìm đường"),
+                        child: AnimatedContainer(
+                          decoration: BoxDecoration(
+                            color: context.theme.primaryColor,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          duration: 250.milliseconds,
+                          width: isQueryRoute ? Get.width * .2 : Get.width * .9,
+                          child: SizedBox(
+                            child: FilledButton(
+                              onPressed: () {
+                                if (isQueryRouteBack) {
+                                  Get.offAllNamed('/home');
+                                  appController.isProcessMode.value = false;
+
+                                  appController.launchMaps(appController
+                                      .getSiteById(appController
+                                          .pharmaTokenDecode()['SiteID'])
+                                      .fullyAddress!);
+                                } else if (isFinished) {
+                                  routeBackToSite();
+                                }
+                                getLocation();
+                              },
+                              child: AnimatedSwitcher(
+                                duration: 300.milliseconds,
+                                child: isQueryRoute
+                                    ? LoadingWidget(
+                                        color: Colors.white,
+                                      )
+                                    : isFinished
+                                        ? isQueryRouteBack
+                                            ? const Text("Dùng Google Map")
+                                            : const Text("Về cửa hàng")
+                                        : const Text("Tìm đường"),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                      ReorderableListView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          onReorder: (oldIndex, newIndex) {
-                            setState(() {
-                              if (oldIndex < newIndex) {
-                                newIndex -= 1;
-                              }
-                              final itemOrder = orders.removeAt(oldIndex);
-                              orders.insert(newIndex, itemOrder);
+                      isFinished
+                          ? Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: Get.height * .05),
+                              child: const Text("Đã hoàn thành các đơn hàng"),
+                            )
+                          : ReorderableListView(
+                              physics: const NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              onReorder: (oldIndex, newIndex) {
+                                setState(() {
+                                  if (oldIndex < newIndex) {
+                                    newIndex -= 1;
+                                  }
+                                  final itemOrder = orders.removeAt(oldIndex);
+                                  orders.insert(newIndex, itemOrder);
 
-                              final itemDistance = distance.removeAt(oldIndex);
-                              distance.insert(newIndex, itemDistance);
+                                  final itemDistance =
+                                      distance.removeAt(oldIndex);
+                                  distance.insert(newIndex, itemDistance);
 
-                              final itemAddress =
-                                  addressList.removeAt(oldIndex);
-                              addressList.insert(newIndex, itemAddress);
+                                  final itemAddress =
+                                      addressList.removeAt(oldIndex);
+                                  addressList.insert(newIndex, itemAddress);
 
-                              final itemLocation =
-                                  locationList.removeAt(oldIndex);
-                              locationList.insert(newIndex, itemLocation);
-                            });
-                          },
-                          children: [
-                            for (var i = 0; i < orders.length; i++)
-                              Padding(
-                                key: UniqueKey(),
-                                padding: const EdgeInsets.all(15),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                        color: context.theme.primaryColor),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: ExpansionTile(
-                                    title: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text("Địa chỉ: ${addressList[i]}"),
-                                        Text(
-                                          "Khoảng cách: ${distance[i].round().toKilometers()}",
+                                  final itemLocation =
+                                      locationList.removeAt(oldIndex);
+                                  locationList.insert(newIndex, itemLocation);
+                                });
+                              },
+                              children: [
+                                  for (var i = 0; i < orders.length; i++)
+                                    Padding(
+                                      key: UniqueKey(),
+                                      padding: const EdgeInsets.all(15),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                              color:
+                                                  context.theme.primaryColor),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
                                         ),
-                                      ],
-                                    ),
-                                    children: [
-                                      DetailContent(
-                                        title: 'Mã Đơn hàng',
-                                        content: Text(orders[i]!.id.toString()),
-                                        haveDivider: false,
-                                      ),
-                                      DetailContent(
-                                        title: 'Tên khách hàng',
-                                        content: Text(orders[i]!
-                                            .orderContactInfo!
-                                            .fullname!),
-                                        haveDivider: false,
-                                      ),
-                                      GestureDetector(
-                                        onTap: () async {
-                                          await launchUrl(
-                                            Uri.parse(
-                                                'tel:${orders[i]!.orderContactInfo!.phoneNumber!}'),
-                                          );
-                                        },
-                                        child: Row(
+                                        child: ExpansionTile(
+                                          title: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                  "Địa chỉ: ${addressList[i]}"),
+                                              Text(
+                                                "Khoảng cách: ${distance[i].round().toKilometers()}",
+                                              ),
+                                            ],
+                                          ),
                                           children: [
-                                            Expanded(
-                                              child: DetailContent(
-                                                title: 'Số điện thoại',
-                                                content: Text(orders[i]!
-                                                    .orderContactInfo!
-                                                    .phoneNumber!),
-                                                haveDivider: false,
+                                            DetailContent(
+                                              title: 'Mã Đơn hàng',
+                                              content: Text(
+                                                  orders[i]!.id.toString()),
+                                              haveDivider: false,
+                                            ),
+                                            DetailContent(
+                                              title: 'Tên khách hàng',
+                                              content: Text(orders[i]!
+                                                  .orderContactInfo!
+                                                  .fullname!),
+                                              haveDivider: false,
+                                            ),
+                                            GestureDetector(
+                                              onTap: () async {
+                                                await launchUrl(
+                                                  Uri.parse(
+                                                      'tel:${orders[i]!.orderContactInfo!.phoneNumber!}'),
+                                                );
+                                              },
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: DetailContent(
+                                                      title: 'Số điện thoại',
+                                                      content: Text(orders[i]!
+                                                          .orderContactInfo!
+                                                          .phoneNumber!),
+                                                      haveDivider: false,
+                                                    ),
+                                                  ),
+                                                  const Padding(
+                                                    padding: EdgeInsets.only(
+                                                        right: 20),
+                                                    child: CircleAvatar(
+                                                      child: Icon(Icons.call),
+                                                    ),
+                                                  )
+                                                ],
                                               ),
                                             ),
-                                            const Padding(
-                                              padding:
-                                                  EdgeInsets.only(right: 20),
-                                              child: CircleAvatar(
-                                                child: Icon(Icons.call),
-                                              ),
+                                            DetailContent(
+                                              title: 'Tổng tiền',
+                                              content: Text(orders[i]!
+                                                  .totalPrice!
+                                                  .convertCurrentcy()),
+                                              haveDivider: false,
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Get.toNamed('/order_detail',
+                                                        arguments:
+                                                            orders[i]!.id);
+                                                  },
+                                                  child: const Text(
+                                                      "Xem chi tiết"),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () async {
+                                                    appController.startDelivery(
+                                                        orders[i]!);
+                                                    appController.launchMaps(
+                                                        orders[i]!
+                                                            .orderDelivery!
+                                                            .fullyAddress!);
+                                                  },
+                                                  child: const Text(
+                                                      "Dùng Google Map"),
+                                                ),
+                                                FilledButton(
+                                                  onPressed: () {
+                                                    appController
+                                                        .updateOrderStatus(
+                                                      orderId: orders[i]!.id!,
+                                                      status: "8",
+                                                    );
+                                                    appController
+                                                        .orderProcessList
+                                                        .removeWhere(
+                                                            (element) =>
+                                                                element ==
+                                                                orders[i]!.id);
+                                                    distance.removeAt(i);
+                                                    addressList.removeAt(i);
+                                                    locationList.removeAt(i);
+                                                    orders.removeAt(i);
+                                                    appController
+                                                        .triggerOrderLoad();
+                                                    setState(() {});
+                                                    if (orders.isEmpty &&
+                                                        appController
+                                                            .orderProcessList
+                                                            .isEmpty) {
+                                                      isFinished = true;
+                                                    }
+                                                  },
+                                                  child:
+                                                      const Text("Hoàn thành"),
+                                                ),
+                                              ],
                                             )
                                           ],
                                         ),
                                       ),
-                                      DetailContent(
-                                        title: 'Tổng tiền',
-                                        content: Text(orders[i]!
-                                            .totalPrice!
-                                            .convertCurrentcy()),
-                                        haveDivider: false,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          TextButton(
-                                            onPressed: () {
-                                              Get.toNamed('/order_detail',
-                                                  arguments: orders[i]!.id);
-                                            },
-                                            child: const Text("Xem chi tiết"),
-                                          ),
-                                          TextButton(
-                                            onPressed: () async {
-                                              appController
-                                                  .startDelivery(orders[i]!);
-                                              appController.launchMaps(
-                                                  orders[i]!
-                                                      .orderDelivery!
-                                                      .homeNumber!);
-                                            },
-                                            child:
-                                                const Text("Dùng Google Map"),
-                                          ),
-                                          FilledButton(
-                                            onPressed: () {
-                                              appController.updateOrderStatus(
-                                                orderId: orders[i]!.id!,
-                                                status: "8",
-                                              );
-                                              appController.orderProcessList
-                                                  .removeWhere((element) =>
-                                                      element == orders[i]!.id);
-                                              distance.removeAt(i);
-                                              addressList.removeAt(i);
-                                              locationList.removeAt(i);
-                                              orders.removeAt(i);
-                                              appController.triggerOrderLoad();
-                                              setState(() {});
-                                              if (orders.isEmpty &&
-                                                  appController.orderProcessList
-                                                      .isEmpty) {
-                                                Get.back();
-                                              }
-                                            },
-                                            child: const Text("Hoàn thành"),
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              )
-                          ]),
+                                    )
+                                ]),
                     ],
                   ),
                 ),

@@ -1,6 +1,9 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../constant/controller.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,6 +16,33 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: SizedBox(
+        height: Get.height * .05,
+        child: Obx(() {
+          if (appController.siteList.isNotEmpty) {
+            return Column(
+              children: [
+                AutoSizeText(
+                  appController
+                      .getSiteById(appController.pharmaTokenDecode()['SiteID'])
+                      .siteName!,
+                  maxLines: 1,
+                  style: const TextStyle(color: Colors.black45),
+                ),
+                AutoSizeText(
+                  appController
+                      .getSiteById(appController.pharmaTokenDecode()['SiteID'])
+                      .fullyAddress!,
+                  maxLines: 1,
+                  style: const TextStyle(color: Colors.black45),
+                ),
+              ],
+            );
+          } else {
+            return Container();
+          }
+        }),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: SizedBox(
@@ -31,10 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       Hero(
                         tag: "logoTag",
                         child: GestureDetector(
-                          // onTap: () {
-                          //   Get.log(
-                          //       appController.pharmacist.value.token.toString());
-                          // },
                           onTap: () {},
                           child: Image.asset(
                             'assets/icon.png',

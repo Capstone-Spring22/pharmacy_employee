@@ -148,9 +148,9 @@ class _OrderDetailState extends State<OrderDetail> {
                       DetailContent(
                         title: "Địa Chỉ",
                         content: Text(
+                          order.orderDelivery!.fullyAddress!,
                           style:
                               TextStyle(fontSize: appController.fontSize.value),
-                          order.orderDelivery!.homeNumber!,
                         ),
                       ),
                     DetailContent(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:pharmacy_employee/views/order/order_tabview.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
@@ -130,10 +131,16 @@ class _OrderScreenState extends State<OrderScreen>
                 TextButton(
                   onPressed: appController.orderProcessList.isEmpty
                       ? null
-                      : () {
+                      : () async {
                           if (appController.orderType.value ==
                               "Giao hàng tận nơi") {
-                            Get.toNamed('/prep_order');
+                            if (await Permission.location.isGranted) {
+                              Get.toNamed('/prep_order');
+                            } else {
+                              await Permission.location
+                                  .request()
+                                  .then((value) => Get.toNamed('/prep_order'));
+                            }
                           } else {
                             Get.toNamed('/prep_pickup');
                           }

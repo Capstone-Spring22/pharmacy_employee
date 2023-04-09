@@ -152,12 +152,10 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
           ..back()
           ..back()
           ..back()
-          ..back()
           ..back();
       },
       onConfirm: () {
         Get
-          ..back()
           ..back()
           ..back()
           ..back()
@@ -224,7 +222,7 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                       content: Text(
                         style:
                             TextStyle(fontSize: appController.fontSize.value),
-                        order.orderDelivery!.homeNumber!,
+                        order.orderDelivery!.fullyAddress!,
                       ),
                     ),
                   DetailContent(
