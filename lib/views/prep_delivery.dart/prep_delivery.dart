@@ -145,10 +145,12 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
         ORSCoordinate(
             latitude: widget.currentPosition.latitude,
             longitude: widget.currentPosition.longitude),
-        ...locationList.map((e) => ORSCoordinate(
-              latitude: e.latitude,
-              longitude: e.longitude,
-            )),
+        ...locationList.map(
+          (e) => ORSCoordinate(
+            latitude: e.latitude,
+            longitude: e.longitude,
+          ),
+        ),
       ],
       continueStraight: true,
       geometry: true,

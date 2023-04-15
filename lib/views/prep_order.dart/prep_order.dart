@@ -1,4 +1,3 @@
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
@@ -6,8 +5,12 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
+import 'package:pharmacy_employee/constant/static.dart';
+import 'package:pharmacy_employee/controller/app_controller.dart';
 import 'package:pharmacy_employee/helpers/loading.dart';
 import 'package:pharmacy_employee/main.dart';
+import 'package:pharmacy_employee/models/map/leg.dart';
+import 'package:pharmacy_employee/models/map/waypoint.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
 import 'package:pharmacy_employee/service/app_service.dart';
 import 'package:pharmacy_employee/views/order_detail/widget/content_info.dart';
@@ -31,7 +34,7 @@ class _PrepOrderState extends State<PrepOrder> {
   List<OrderHistoryDetail?> orderDetails = [];
   List<String> addressList = [];
   List<Location> locationList = [];
-  List<double> distance = [];
+  List<Leg> legList = [];
 
   @override
   void initState() {
@@ -51,34 +54,46 @@ class _PrepOrderState extends State<PrepOrder> {
         ),
       );
 
-      for (var i = 0; i < orderDetails.length; i++) {
-        totalProduct += orderDetails[i]!.orderProducts!.length;
+      List<OrderHistoryDetail?> tempOrderDetails = await Future.wait(
+        appController.orderProcessList.map(
+          (e) => AppService().fetchOrderDetail(e),
+        ),
+      );
+
+      for (var i = 0; i < tempOrderDetails.length; i++) {
+        totalProduct += tempOrderDetails[i]!.orderProducts!.length;
       }
 
-      currentPosition = await Geolocator.getCurrentPosition();
+      //Get current location latlng
+      currentPosition = await AppController.getCurrentLocation();
       for (var i = 0; i < appController.orderProcessList.length; i++) {
-        addressList.add(orderDetails[i]!.orderDelivery!.fullyAddress!);
+        addressList.add(tempOrderDetails[i]!.orderDelivery!.fullyAddress!);
       }
 
-      List<List<Location>> locations =
-          await Future.wait(addressList.map((e) => locationFromAddress(e)));
+      //Get LatLng from address
+      List<List<Location>> locations = await Future.wait(
+        addressList.map((e) => locationFromAddress(e)),
+      );
 
+      //Create list of location
       for (var location in locations) {
         locationList.add(location[0]);
       }
 
-      locationList.sort((a, b) => Geolocator.distanceBetween(
-              currentPosition!.latitude,
-              currentPosition!.longitude,
-              a.latitude,
-              a.longitude)
-          .compareTo(Geolocator.distanceBetween(currentPosition!.latitude,
-              currentPosition!.longitude, b.latitude, b.longitude)));
+      //Get fastest route
+      var data = await AppService()
+          .getOptimizeDistance(currentPosition!, locationList);
 
-      distance = locationList
-          .map((e) => Geolocator.distanceBetween(currentPosition!.latitude,
-              currentPosition!.longitude, e.latitude, e.longitude))
-          .toList();
+      List<Waypoint> wayPointList = [];
+      for (final i in data['waypoints']) {
+        wayPointList.add(Waypoint.fromJson(i));
+      }
+
+      orderDetails = rearrangeList(tempOrderDetails, wayPointList);
+      legList.clear();
+      for (var itm in data['trips'][0]['legs']) {
+        legList.add(Leg.fromJson(itm));
+      }
 
       setState(() {
         isLoading = false;
@@ -102,7 +117,7 @@ class _PrepOrderState extends State<PrepOrder> {
         title: const Text('Chuẩn bị đơn hàng'),
         actions: const [],
       ),
-      body: isLoading || isTextAnimateComplete == false
+      body: isLoading
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -113,44 +128,44 @@ class _PrepOrderState extends State<PrepOrder> {
                   const SizedBox(
                     height: 10,
                   ),
-                  AnimatedTextKit(
-                    isRepeatingAnimation: false,
-                    onFinished: () {
-                      setState(() {
-                        isTextAnimateComplete = true;
-                      });
-                    },
-                    animatedTexts: [
-                      TypewriterAnimatedText(
-                        'Đang tải đơn hàng',
-                        textStyle: const TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TypewriterAnimatedText(
-                        'Đang lấy địa chỉ',
-                        textStyle: const TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TypewriterAnimatedText(
-                        'Tính khoảng cách',
-                        textStyle: const TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TypewriterAnimatedText(
-                        'Sắp xếp theo khoảng cách',
-                        textStyle: const TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  )
+                  // AnimatedTextKit(
+                  //   isRepeatingAnimation: false,
+                  //   onFinished: () {
+                  //     setState(() {
+                  //       isTextAnimateComplete = true;
+                  //     });
+                  //   },
+                  //   animatedTexts: [
+                  //     TypewriterAnimatedText(
+                  //       'Đang tải đơn hàng',
+                  //       textStyle: const TextStyle(
+                  //         fontSize: 25,
+                  //         fontWeight: FontWeight.bold,
+                  //       ),
+                  //     ),
+                  //     TypewriterAnimatedText(
+                  //       'Đang lấy địa chỉ',
+                  //       textStyle: const TextStyle(
+                  //         fontSize: 25,
+                  //         fontWeight: FontWeight.bold,
+                  //       ),
+                  //     ),
+                  //     TypewriterAnimatedText(
+                  //       'Tính khoảng cách',
+                  //       textStyle: const TextStyle(
+                  //         fontSize: 25,
+                  //         fontWeight: FontWeight.bold,
+                  //       ),
+                  //     ),
+                  //     TypewriterAnimatedText(
+                  //       'Sắp xếp theo khoảng cách',
+                  //       textStyle: const TextStyle(
+                  //         fontSize: 25,
+                  //         fontWeight: FontWeight.bold,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // )
                 ],
               ),
             )
@@ -160,10 +175,13 @@ class _PrepOrderState extends State<PrepOrder> {
                   ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
+                    itemCount: appController.orderProcessList.length,
                     itemBuilder: (context, index) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -180,7 +198,9 @@ class _PrepOrderState extends State<PrepOrder> {
                           child: ExpansionTile(
                             initiallyExpanded: true,
                             title: AutoSizeText(
-                                appController.orderProcessList[index]),
+                              appController.orderProcessList[index],
+                              maxLines: 1,
+                            ),
                             expandedCrossAxisAlignment:
                                 CrossAxisAlignment.start,
                             children: [
@@ -208,7 +228,7 @@ class _PrepOrderState extends State<PrepOrder> {
                               DetailContent(
                                 title: "Khoảng cách",
                                 content: AutoSizeText(
-                                  distance[index].round().toKilometers(),
+                                  legList[index].distance!.toKilometers(),
                                 ),
                                 haveDivider: false,
                               ),
@@ -292,7 +312,6 @@ class _PrepOrderState extends State<PrepOrder> {
                         ),
                       );
                     },
-                    itemCount: appController.orderProcessList.length,
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -323,7 +342,7 @@ class _PrepOrderState extends State<PrepOrder> {
 
                         Get.to(() => PrepDeliveryScreen(
                               addressList: addressList,
-                              distance: distance,
+                              distance: const [],
                               locationList: locationList,
                               orders: orderDetails,
                               currentPosition: currentPosition!,

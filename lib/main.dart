@@ -32,7 +32,13 @@ extension DateFormatter on String {
   }
 }
 
-extension DoubleExtensions on int {
+extension DoubleExtensions on int {}
+
+extension PriceConvert on num {
+  String convertCurrentcy() {
+    return NumberFormat.currency(locale: 'vi', symbol: 'đ').format(this);
+  }
+
   String toKilometers() {
     if (this < 1000) {
       return '${toStringAsFixed(0)}m';
@@ -41,11 +47,16 @@ extension DoubleExtensions on int {
       return '${distanceInKm.toStringAsFixed(2)}km';
     }
   }
-}
 
-extension PriceConvert on num {
-  String convertCurrentcy() {
-    return NumberFormat.currency(locale: 'vi', symbol: 'đ').format(this);
+  String convertToHoursMinutes() {
+    int wholeHours = (this / 3600).floor();
+    int remainingMinutes = ((this % 3600) / 60).floor();
+    int remainingSeconds = (this % 60).round();
+
+    String hoursString = wholeHours.toString();
+    String minutesString = remainingMinutes.toString().padLeft(2, '0');
+    String secondsString = remainingSeconds.toString().padLeft(2, '0');
+    return '$hoursString tiếng $minutesString phút';
   }
 }
 
@@ -62,9 +73,9 @@ void main() async {
   await dotenv.load(fileName: "dotenv");
   await GetStorage.init();
   await initializeDateFormatting('vi_VN', null);
+  Get.put(AppController());
 
   SystemAlertWindow.requestPermissions;
-  Get.put(AppController());
 
   await SystemAlertWindow.checkPermissions();
   ReceivePort port = ReceivePort();
@@ -112,11 +123,11 @@ class MyApp extends StatelessWidget {
           page: () => const OrderScreen(),
         ),
         GetPage(name: '/debug', page: () => const DebugScreen()),
-        GetPage(name: '/prep_order', page: () => const PrepOrder()),
         GetPage(name: '/overlay', page: () => const OverLayScreen()),
         GetPage(name: '/login', page: () => const LoginScreen()),
         GetPage(name: '/user', page: () => const UserScreen()),
         GetPage(name: '/prep_pickup', page: () => const PrepPickUpScreen()),
+        GetPage(name: '/prep_order', page: () => const PrepOrder()),
         GetPage(name: '/order_detail', page: () => const OrderDetail()),
         GetPage(name: '/order_confirm', page: () => const ConfirmOrderScreen()),
         GetPage(

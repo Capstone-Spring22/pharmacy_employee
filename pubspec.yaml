@@ -19,7 +19,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.19.0 <3.0.0"
+  sdk: ">=2.19.2 <3.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -33,6 +33,7 @@ dependencies:
   cached_network_image: ^3.2.3
   cupertino_icons: ^1.0.2
   dio: ^4.0.6
+  exprollable_page_view: ^1.0.0-beta.3
   flex_color_scheme: ^7.0.0
   flutter:
     sdk: flutter
@@ -44,6 +45,7 @@ dependencies:
   flutter_swipe_button: ^2.1.1+1
   geocoding: ^2.1.0
   geolocator: ^9.0.2
+  georouter: ^0.0.1+1
   get: ^4.6.5
   get_storage: ^2.1.1
   google_maps_flutter: ^2.2.3

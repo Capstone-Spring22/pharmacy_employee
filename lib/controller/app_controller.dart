@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -77,19 +78,30 @@ class AppController extends GetxController {
 
   @override
   void onInit() {
+    super.onInit();
     final box = GetStorage();
     openrouteservice = OpenRouteService(
-        apiKey: '5b3ce3597851110001cf6248e2b15d5d8ed740e7a67b546cb69bc43d');
+      apiKey: '5b3ce3597851110001cf6248e2b15d5d8ed740e7a67b546cb69bc43d',
+      profile: ORSProfile.drivingCar,
+    );
+
     final user = box.read('user');
 
     fontSize.value = box.read('fontSize') ?? 18;
 
-    ever(pharmacist, pharmacistState);
     if (user != null) {
       pharmacist.value = Pharmacist.fromJson(user);
+      isLogin.value = true;
+
+      options = Options(headers: {
+        'Authorization': 'Bearer ${pharmacist.value.token}',
+      });
     }
-    super.onInit();
+    ever(pharmacist, pharmacistState);
   }
+
+  static Future<Position> getCurrentLocation() async =>
+      await Geolocator.getCurrentPosition(forceAndroidLocationManager: true);
 
   void pharmacistState(Pharmacist pm) {
     if (pm.id == null) {
@@ -119,14 +131,17 @@ class AppController extends GetxController {
     return siteList.firstWhere((element) => element.id == id);
   }
 
-  setupUser() {
+  setupUser() async {
     isLogin.value = true;
+
     options = Options(headers: {
       'Authorization': 'Bearer ${pharmacist.value.token}',
     });
-    fetchAllSite();
+
     final box = GetStorage();
+
     box.write('user', pharmacist.value.toJson());
+    await fetchAllSite();
   }
 
   removeUserSetting() {

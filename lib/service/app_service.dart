@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:get/get.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:georouter/georouter.dart';
+import 'package:get/get.dart' hide Response;
 import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
 import 'package:pharmacy_employee/models/pharmacist.dart';
@@ -215,5 +218,133 @@ class AppService {
     } on DioError catch (e) {
       Get.log(e.response.toString());
     }
+  }
+
+  // Future<Map<String, dynamic>> getDistance(
+  //     Position currentPosition, List<Location> listDestinationLocation) async {
+  //   const apiKey =
+  //       '5b3ce3597851110001cf6248e2b15d5d8ed740e7a67b546cb69bc43d'; // Replace with your actual API key
+  //   const apiUrl = 'https://api.openrouteservice.org/v2/directions/driving-car';
+
+  //   final data = {
+  //     'coordinates': [
+  //       [currentPosition.longitude, currentPosition.latitude],
+  //       ...listDestinationLocation.map((e) => [e.longitude, e.latitude]),
+  //       [106.7585922, 10.8106114]
+  //     ],
+  //   };
+
+  //   try {
+  //     final res = await dio.post(
+  //       apiUrl,
+  //       options: Options(headers: {
+  //         'Authorization': apiKey,
+  //       }),
+  //       data: data,
+  //     );
+
+  //     if (res.statusCode == 200) {
+  //       final data = res.data;
+  //       return data;
+  //     } else {
+  //       throw Exception('Failed to get distance');
+  //     }
+  //   } on DioError catch (e) {
+  //     Get.log(e.response.toString());
+  //   }
+  //   return {};
+  // }
+
+  Future<List<PolylinePoint>?> getOptimizeRoute(
+      Position currentPosition, List<Location> listDestinationLocation) async {
+    List<String> latLngList = [
+      "${currentPosition.latitude},${currentPosition.longitude}",
+      ...listDestinationLocation
+          .map((waypoint) => "${waypoint.latitude},${waypoint.longitude}")
+    ];
+
+    final georouter = GeoRouter(mode: TravelMode.driving);
+
+    final coordinates = [
+      PolylinePoint(
+          latitude: currentPosition.latitude,
+          longitude: currentPosition.longitude),
+      ...listDestinationLocation.map(
+          (e) => PolylinePoint(latitude: e.latitude, longitude: e.longitude)),
+    ];
+    try {
+      final directions =
+          await georouter.getDirectionsBetweenPoints(coordinates);
+      Get.log(directions.toString());
+      return directions;
+    } on GeoRouterException {
+// Handle GeoRouterException
+    } on HttpException {
+// Handle HttpException
+    }
+    return null;
+  }
+
+  static List<PolylinePoint> decodePolyline(String encoded) {
+    final List<PolylinePoint> points = <PolylinePoint>[];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
+
+    while (index < len) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      final int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      final int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      final PolylinePoint point =
+          PolylinePoint(latitude: lat / 1E5, longitude: lng / 1E5);
+      points.add(point);
+    }
+
+    return points;
+  }
+
+  Future<Map<String, dynamic>> getOptimizeDistance(
+      Position currentPosition, List<Location> listDestinationLocation,
+      {bool roundTrip = false}) async {
+    final List listCoor = [
+      "${currentPosition.longitude},${currentPosition.latitude}",
+      ...listDestinationLocation
+          .map((e) => "${e.longitude},${e.latitude}")
+          .toList()
+    ];
+    String joinedCoor = listCoor.join(';');
+    Get.log(joinedCoor);
+    Response res;
+    try {
+      res = await dio.get(
+          'http://router.project-osrm.org/trip/v1/driving/$joinedCoor',
+          queryParameters: {
+            'steps': true,
+            'source': 'first',
+            'roundtrip': roundTrip,
+          });
+
+      return res.data;
+    } catch (e) {
+      Get.log(e.toString());
+    }
+    return {};
   }
 }
