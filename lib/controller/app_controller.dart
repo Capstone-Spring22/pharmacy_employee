@@ -131,6 +131,16 @@ class AppController extends GetxController {
     return siteList.firstWhere((element) => element.id == id);
   }
 
+  List<OrderHistory> list(String type) {
+    if (type == 'unAccept') {
+      return orderUnAcceptList;
+    } else if (type == 'active') {
+      return orderActiveList;
+    } else {
+      return orderCantAcceptList;
+    }
+  }
+
   setupUser() async {
     isLogin.value = true;
 

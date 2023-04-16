@@ -1,3 +1,5 @@
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:exprollable_page_view/exprollable_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:get/get.dart';
@@ -8,15 +10,79 @@ import 'package:pharmacy_employee/models/order_detail.dart';
 import 'package:pharmacy_employee/service/app_service.dart';
 import 'package:pharmacy_employee/views/order_detail/widget/content_info.dart';
 
+void showOrderDetailDialog(BuildContext context, int index, String type) {
+  showModalExprollable(
+    context,
+    useSafeArea: false,
+    useRootNavigator: false,
+    builder: (context) => ExproPage(index: index, type: type),
+  );
+}
+
+class ExproPage extends StatefulWidget {
+  const ExproPage({super.key, required this.index, required this.type});
+
+  final int index;
+  final String type;
+
+  @override
+  State<ExproPage> createState() => _ExproPageState();
+}
+
+class _ExproPageState extends State<ExproPage> {
+  late final ExprollablePageController exprollablePageController;
+
+  @override
+  void initState() {
+    exprollablePageController = ExprollablePageController(
+      initialPage: widget.index,
+      overshootEffect: true,
+    );
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    exprollablePageController.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final list = appController.list(widget.type);
+    return ExprollablePageView(
+      controller: exprollablePageController,
+      itemCount: appController.list(widget.type).length,
+      itemBuilder: (context, index) {
+        return PageGutter(
+          gutterWidth: 8,
+          child: Card(
+              margin: EdgeInsets.zero,
+              clipBehavior: Clip.antiAlias,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: OrderDetail(id: list[index].id!)),
+        );
+      },
+    );
+  }
+}
+
 class OrderDetail extends StatefulWidget {
-  const OrderDetail({super.key});
+  const OrderDetail({super.key, this.id = ""});
+
+  final String id;
 
   @override
   State<OrderDetail> createState() => _OrderDetailState();
 }
 
 class _OrderDetailState extends State<OrderDetail> {
-  final String id = Get.arguments;
+  String id = "";
   late final OrderHistoryDetail order;
   bool isFetch = true;
   List<Map<String, dynamic>> mapStatus = [];
@@ -42,6 +108,14 @@ class _OrderDetailState extends State<OrderDetail> {
   @override
   void initState() {
     super.initState();
+    if (widget.id.isNotEmpty) {
+      id = widget.id;
+    } else {
+      try {
+        id = Get.arguments;
+      } catch (e) {}
+    }
+
     _fetchOrderDetail();
   }
 
@@ -49,7 +123,10 @@ class _OrderDetailState extends State<OrderDetail> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(id),
+        title: AutoSizeText(
+          id,
+          maxLines: 1,
+        ),
       ),
       body: isFetch
           ? Center(
@@ -59,6 +136,7 @@ class _OrderDetailState extends State<OrderDetail> {
             )
           : SafeArea(
               child: SingleChildScrollView(
+                controller: PageContentScrollController.of(context),
                 child: Column(
                   children: [
                     DetailContent(

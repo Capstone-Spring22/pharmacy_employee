@@ -1,3 +1,4 @@
+import 'package:exprollable_page_view/exprollable_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
@@ -5,6 +6,7 @@ import 'package:pharmacy_employee/controller/app_controller.dart';
 import 'package:pharmacy_employee/helpers/loading.dart';
 import 'package:pharmacy_employee/main.dart';
 import 'package:pharmacy_employee/models/order.dart';
+import 'package:pharmacy_employee/views/order_detail/order_detail.dart';
 
 class OrderTabView extends StatefulWidget {
   const OrderTabView(this.scrollController, this.type, {super.key});
@@ -18,6 +20,28 @@ class OrderTabView extends StatefulWidget {
 
 class _OrderTabViewState extends State<OrderTabView> {
   List<String> viewType = ["2", "3", "4", "9", "6", "7", "8", "10"];
+  late final ExprollablePageController exprollablePageController;
+  final peekOffset = const ViewportOffset.fractional(0.1);
+  @override
+  void initState() {
+    super.initState();
+    exprollablePageController = ExprollablePageController(
+      initialViewportOffset: peekOffset,
+      maxViewportOffset: peekOffset,
+      snapViewportOffsets: [
+        ViewportOffset.expanded,
+        ViewportOffset.shrunk,
+        peekOffset,
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    exprollablePageController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     String dateRender = "";
@@ -77,10 +101,13 @@ class _OrderTabViewState extends State<OrderTabView> {
                         }
 
                         return GestureDetector(
-                          onTap: () => Get.toNamed(
-                            '/order_detail',
-                            arguments: item.id,
-                          ),
+                          // onTap: () => Get.toNamed(
+                          //   '/order_detail',
+                          //   arguments: item.id,
+                          // ),
+                          onTap: () {
+                            showOrderDetailDialog(context, index, widget.type);
+                          },
                           onLongPress: () {
                             if (appController.orderTabController.value!.index ==
                                 0) {
