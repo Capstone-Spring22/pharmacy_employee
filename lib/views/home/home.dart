@@ -18,30 +18,46 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       bottomNavigationBar: SizedBox(
         height: Get.height * .05,
-        child: Obx(() {
-          if (appController.siteList.isNotEmpty) {
-            return Column(
-              children: [
-                AutoSizeText(
-                  appController
-                      .getSiteById(appController.pharmaTokenDecode()['SiteID'])
-                      .siteName!,
-                  maxLines: 1,
-                  style: const TextStyle(color: Colors.black45),
-                ),
-                AutoSizeText(
-                  appController
-                      .getSiteById(appController.pharmaTokenDecode()['SiteID'])
-                      .fullyAddress!,
-                  maxLines: 1,
-                  style: const TextStyle(color: Colors.black45),
-                ),
-              ],
-            );
-          } else {
-            return Container();
-          }
-        }),
+        child: FutureBuilder(
+            future: appController.fetchAllSite(),
+            builder: (_, snap) {
+              appController.siteList.clear();
+              if (snap.connectionState == ConnectionState.done) {
+                appController.siteList.addAll(snap.data!);
+              }
+              if (snap.connectionState == ConnectionState.waiting) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: const LinearProgressIndicator(),
+                );
+              }
+              return Obx(() {
+                if (appController.siteList.isNotEmpty) {
+                  return Column(
+                    children: [
+                      AutoSizeText(
+                        appController
+                            .getSiteById(
+                                appController.pharmaTokenDecode()['SiteID'])
+                            .siteName!,
+                        maxLines: 1,
+                        style: const TextStyle(color: Colors.black45),
+                      ),
+                      AutoSizeText(
+                        appController
+                            .getSiteById(
+                                appController.pharmaTokenDecode()['SiteID'])
+                            .fullyAddress!,
+                        maxLines: 1,
+                        style: const TextStyle(color: Colors.black45),
+                      ),
+                    ],
+                  );
+                } else {
+                  return Container();
+                }
+              });
+            }),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

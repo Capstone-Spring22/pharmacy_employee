@@ -77,7 +77,7 @@ class AppController extends GetxController {
   RxDouble fontSize = 18.0.obs;
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
     final box = GetStorage();
     openrouteservice = OpenRouteService(
@@ -91,6 +91,7 @@ class AppController extends GetxController {
 
     if (user != null) {
       pharmacist.value = Pharmacist.fromJson(user);
+      // setupUser();
       isLogin.value = true;
 
       options = Options(headers: {
@@ -151,7 +152,6 @@ class AppController extends GetxController {
     final box = GetStorage();
 
     box.write('user', pharmacist.value.toJson());
-    await fetchAllSite();
   }
 
   removeUserSetting() {
@@ -169,8 +169,9 @@ class AppController extends GetxController {
   Map<String, dynamic> pharmaTokenDecode() =>
       JwtDecoder.decode(pharmacist.value.token!);
 
-  Future fetchAllSite() async {
-    siteList.value = await AppService().fetchAllSite();
+  Future<List<Site>> fetchAllSite() async {
+    final result = await AppService().fetchAllSite();
+    return result;
   }
 
   Future initLookup(String name, int page) async {
