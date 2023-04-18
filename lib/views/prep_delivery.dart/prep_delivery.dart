@@ -470,10 +470,10 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                                   Get.offAllNamed('/home');
                                   appController.isProcessMode.value = false;
 
-                                  appController.launchMaps(appController
-                                      .getSiteById(appController
-                                          .pharmaTokenDecode()['SiteID'])
-                                      .fullyAddress!);
+                                  // appController.launchMaps(appController
+                                  //     .getSiteById(appController
+                                  //         .pharmaTokenDecode()['SiteID'])
+                                  //     .fullyAddress!);
                                 } else {
                                   selectedValue == 0
                                       ? getRouteFastest()
