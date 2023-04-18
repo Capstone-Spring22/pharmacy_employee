@@ -55,9 +55,11 @@ dependencies:
   jwt_decoder: ^2.0.1
   loading_animation_widget: ^1.2.0+4
   location: ^4.4.0
+  lottie: ^2.3.2
   msh_checkbox: ^2.0.1
   open_route_service: ^1.2.2
   permission_handler: ^10.2.0
+  restart_app: ^1.1.2
   simple_barcode_scanner: ^0.0.8
   system_alert_window: ^1.2.1
   toggle_switch: ^2.0.1
@@ -90,6 +92,7 @@ flutter:
   assets:
     - assets/banner.png
     - assets/icon.png
+    - assets/lottie/error.json
     - dotenv
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

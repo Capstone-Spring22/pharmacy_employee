@@ -13,6 +13,7 @@ import 'package:pharmacy_employee/isolate_manager.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
 import 'package:pharmacy_employee/views/confirm_order.dart/confirm_order.dart';
 import 'package:pharmacy_employee/views/debug/debug_screen.dart';
+import 'package:pharmacy_employee/views/error/error.dart';
 import 'package:pharmacy_employee/views/home/home.dart';
 import 'package:pharmacy_employee/views/login/login.dart';
 import 'package:pharmacy_employee/views/lookup/lookup.dart';
@@ -94,6 +95,10 @@ bool callBackFunction(String tag) {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
+    return ErrorScreen(errorDetails: errorDetails);
+  };
 
   await dotenv.load(fileName: "dotenv");
   await GetStorage.init();
