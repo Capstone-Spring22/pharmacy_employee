@@ -38,6 +38,7 @@ dependencies:
   flex_color_scheme: ^7.0.0
   flutter:
     sdk: flutter
+  flutter_animate: ^4.1.1+1
   flutter_dotenv: ^5.0.2
   flutter_google_places_sdk: ^0.3.2+6
   flutter_login: ^4.1.1
@@ -54,6 +55,7 @@ dependencies:
   jwt_decoder: ^2.0.1
   loading_animation_widget: ^1.2.0+4
   location: ^4.4.0
+  msh_checkbox: ^2.0.1
   open_route_service: ^1.2.2
   permission_handler: ^10.2.0
   simple_barcode_scanner: ^0.0.8

@@ -1,5 +1,7 @@
 import 'package:exprollable_page_view/exprollable_page_view.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/controller/app_controller.dart';
@@ -81,176 +83,175 @@ class _OrderTabViewState extends State<OrderTabView> {
         } else {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    controller: widget.scrollController,
-                    itemCount: list.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index < list.length) {
-                        final item = list[index];
-                        bool dif =
-                            dateRender == item.createdDate!.convertToDate;
-                        if (!dif) {
-                          dateRender = item.createdDate!.convertToDate;
-                        }
+            child: Expanded(
+              child: ListView.builder(
+                shrinkWrap: true,
+                controller: widget.scrollController,
+                itemCount: list.length + 1,
+                itemBuilder: (context, index) {
+                  if (index < list.length) {
+                    final item = list[index];
+                    bool dif = dateRender == item.createdDate!.convertToDate;
+                    if (!dif) {
+                      dateRender = item.createdDate!.convertToDate;
+                    }
 
-                        if (isProcessMode) {
-                          if (item.orderStatus != '6' &&
-                              item.orderStatus != '3' &&
-                              item.orderStatus != '7') {
-                            return Container();
-                          }
-                        }
+                    if (isProcessMode) {
+                      if (item.orderStatus != '6' &&
+                          item.orderStatus != '3' &&
+                          item.orderStatus != '7') {
+                        return Container();
+                      }
+                    }
 
-                        return GestureDetector(
-                          // onTap: () => Get.toNamed(
-                          //   '/order_detail',
-                          //   arguments: item.id,
-                          // ),
-                          onTap: () {
-                            showOrderDetailDialog(context, index, widget.type);
-                          },
-                          onLongPress: () {
-                            if (appController.orderTabController.value!.index ==
-                                0) {
-                              appController.isProcessMode.toggle();
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                if (appController.isProcessMode.isTrue &&
-                                    appController
-                                            .orderTabController.value!.index ==
-                                        0)
-                                  Checkbox(
-                                    value: appController.orderProcessList
-                                        .contains(item.id),
-                                    onChanged: (value) {
-                                      if (value!) {
-                                        if (appController
-                                            .orderProcessList.isEmpty) {
-                                          appController.orderType.value =
-                                              item.orderTypeName!;
-                                        }
-                                        if (item.orderTypeName !=
-                                            appController.orderType.value) {
-                                          Get.showSnackbar(
-                                            GetSnackBar(
-                                              message:
-                                                  "Không thể thực hiện đơn hàng có loại khác nhau",
-                                              backgroundColor: context
-                                                  .theme.colorScheme.error,
-                                              duration:
-                                                  const Duration(seconds: 2),
-                                            ),
-                                          );
-                                        } else {
-                                          appController.orderProcessList
-                                              .add(item.id!);
-                                        }
-                                      } else {
-                                        appController.orderProcessList
-                                            .remove(item.id);
-                                      }
-                                    },
-                                  ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (!dif &&
-                                          appController.isProcessMode.isFalse)
-                                        Text(
-                                          dateRender,
-                                          style: TextStyle(
-                                            fontSize:
-                                                appController.fontSize.value,
-                                          ),
+                    return GestureDetector(
+                      onTap: () {
+                        showOrderDetailDialog(context, index, widget.type);
+                      },
+                      onLongPress: () {
+                        if (appController.orderTabController.value!.index ==
+                            0) {
+                          appController.isProcessMode.toggle();
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            if (appController.isProcessMode.isTrue &&
+                                appController.orderTabController.value!.index ==
+                                    0)
+                              Checkbox(
+                                value: appController.orderProcessList
+                                    .contains(item.id),
+                                onChanged: (value) {
+                                  if (value!) {
+                                    if (appController
+                                        .orderProcessList.isEmpty) {
+                                      appController.orderType.value =
+                                          item.orderTypeName!;
+                                    }
+                                    if (item.orderTypeName !=
+                                        appController.orderType.value) {
+                                      Get.showSnackbar(
+                                        GetSnackBar(
+                                          message:
+                                              "Không thể thực hiện đơn hàng có loại khác nhau",
+                                          backgroundColor:
+                                              context.theme.colorScheme.error,
+                                          duration: const Duration(seconds: 2),
                                         ),
-                                      Obx(() => AnimatedContainer(
-                                            duration: const Duration(
-                                              milliseconds: 100,
+                                      );
+                                    } else {
+                                      appController.orderProcessList
+                                          .add(item.id!);
+                                    }
+                                  } else {
+                                    appController.orderProcessList
+                                        .remove(item.id);
+                                  }
+                                },
+                              ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (!dif &&
+                                      appController.isProcessMode.isFalse)
+                                    Text(
+                                      dateRender,
+                                      style: TextStyle(
+                                        fontSize: appController.fontSize.value,
+                                      ),
+                                    ),
+                                  Obx(() => AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 100,
+                                        ),
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: theme.primaryColor,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.grey.shade300,
+                                              blurRadius: 7,
+                                              spreadRadius: 5,
                                             ),
-                                            width: double.infinity,
-                                            decoration: BoxDecoration(
-                                              border: Border.all(
+                                          ],
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: appController
+                                                  .isProcessMode.isTrue
+                                              ? appController.orderProcessList
+                                                      .contains(item.id)
+                                                  ? theme.secondaryHeaderColor
+                                                  : Colors.white
+                                              : Colors.white,
+                                        ),
+                                        padding: const EdgeInsets.all(10),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            if (kDebugMode)
+                                              Text(
+                                                "order status: ${item.orderStatus}",
+                                                style: TextStyle(
+                                                  fontSize: fontSize.value,
+                                                ),
+                                              ),
+                                            Text(
+                                              "Tình Trạng: ${item.orderStatusName}",
+                                              style: TextStyle(
+                                                fontSize: fontSize.value,
                                                 color: theme.primaryColor,
                                               ),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: appController
-                                                      .isProcessMode.isTrue
-                                                  ? appController
-                                                          .orderProcessList
-                                                          .contains(item.id)
-                                                      ? theme
-                                                          .secondaryHeaderColor
-                                                      : Colors.transparent
-                                                  : Colors.transparent,
                                             ),
-                                            padding: const EdgeInsets.all(10),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  "Tình Trạng: ${item.orderStatusName} - ${item.orderStatus}",
-                                                  style: TextStyle(
-                                                    fontSize: fontSize.value,
-                                                    color: theme.primaryColor,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  "Ngày Tạo: ${item.createdDate!.convertToDate}",
-                                                  style: TextStyle(
-                                                    fontSize: fontSize.value,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  "Loại Đơn: ${item.orderTypeName}",
-                                                  style: TextStyle(
-                                                    fontSize: fontSize.value,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  item.paymentMethod.toString(),
-                                                  style: TextStyle(
-                                                    fontSize: fontSize.value,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  "Tổng Tiền: ${item.totalPrice!.convertCurrentcy()}",
-                                                  style: TextStyle(
-                                                    fontSize: fontSize.value,
-                                                  ),
-                                                ),
-                                              ],
+                                            Text(
+                                              "Ngày Tạo: ${item.createdDate!.convertToDate}",
+                                              style: TextStyle(
+                                                fontSize: fontSize.value,
+                                              ),
                                             ),
-                                          )),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                                            Text(
+                                              "Loại Đơn: ${item.orderTypeName}",
+                                              style: TextStyle(
+                                                fontSize: fontSize.value,
+                                              ),
+                                            ),
+                                            Text(
+                                              item.paymentMethod.toString(),
+                                              style: TextStyle(
+                                                fontSize: fontSize.value,
+                                              ),
+                                            ),
+                                            Text(
+                                              "Tổng Tiền: ${item.totalPrice!.convertCurrentcy()}",
+                                              style: TextStyle(
+                                                fontSize: fontSize.value,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      } else {
-                        if (isLoading) {
-                          return LoadingWidget();
-                        } else {
-                          return const SizedBox();
-                        }
-                      }
-                    },
-                  ),
-                ),
-              ],
+                          ],
+                        ),
+                      ),
+                    ).animate().slideX(delay: (index * 20).ms).fade();
+                  } else {
+                    if (isLoading) {
+                      return LoadingWidget();
+                    } else {
+                      return const SizedBox();
+                    }
+                  }
+                },
+              ),
             ),
           );
         }

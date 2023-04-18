@@ -21,9 +21,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: FutureBuilder(
           future: appController.fetchAllSite(),
           builder: (_, snap) {
-            appController.siteList.clear();
             if (snap.connectionState == ConnectionState.done) {
-              appController.siteList.addAll(snap.data!);
+              appController.siteList.value = snap.data!;
             }
             if (snap.connectionState == ConnectionState.waiting) {
               return Container(

@@ -1,6 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_swipe_button/flutter_swipe_button.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -14,7 +14,8 @@ import 'package:pharmacy_employee/models/map/waypoint.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
 import 'package:pharmacy_employee/service/app_service.dart';
 import 'package:pharmacy_employee/views/order_detail/widget/content_info.dart';
-import 'package:pharmacy_employee/views/prep_delivery.dart/prep_delivery.dart';
+import 'package:pharmacy_employee/views/prep_order.dart/widget/toDeliveryBtn.dart';
+import 'package:pharmacy_employee/views/prep_order.dart/widget/unitcheck.dart';
 
 class PrepOrder extends StatefulWidget {
   const PrepOrder({super.key});
@@ -96,10 +97,11 @@ class _PrepOrderState extends State<PrepOrder> {
       for (var itm in osrmMapData['trips'][0]['legs']) {
         legList.add(Leg.fromJson(itm));
       }
-
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     } on Exception catch (e) {
       Get.log(e.toString());
     }
@@ -182,6 +184,9 @@ class _PrepOrderState extends State<PrepOrder> {
                       final contactInfo =
                           orderDetails[index]!.orderContactInfo!;
                       final products = orderDetails[index]!.orderProducts!;
+                      final grouped = orderDetails[index]!
+                          .orderProducts!
+                          .groupProductByName();
                       return Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -245,122 +250,91 @@ class _PrepOrderState extends State<PrepOrder> {
                                       .convertCurrentcy(),
                                 ),
                               ),
-                              DetailContent(
-                                title: "Danh sách sản phẩm",
-                                haveDivider: false,
-                                content: ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemBuilder: (context, i) {
-                                    return Container(
-                                      decoration: const BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                      child: ListTile(
-                                        trailing: Checkbox(
-                                          value: finished.contains(
-                                            products[i].id,
-                                          ),
-                                          onChanged: (value) {
-                                            if (value!) {
-                                              setState(() {
-                                                finishOrder(orderDetails[index]!
-                                                    .orderProducts![i]
-                                                    .id!);
-                                              });
-                                            } else {
-                                              setState(() {
-                                                finished.remove(
-                                                  products[i].id,
-                                                );
-                                                isCompletePrep =
-                                                    finished.length ==
-                                                        totalProduct;
-                                              });
-                                            }
-                                          },
-                                        ),
-                                        title: Text(
-                                          products[i].productName!,
-                                        ),
-                                        subtitle: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "${products[i].quantity} ${products[i].unitName} - ${orderDetails[index]!.orderProducts![i].priceTotal!.convertCurrentcy()}",
-                                            ),
-                                            AutoSizeText(
-                                              products[i]
-                                                      .productNoteFromPharmacist ??
-                                                  "",
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  itemCount: orderDetails[index]!
-                                      .orderProducts!
-                                      .length,
-                                ),
-                              ),
+                              productList(grouped, products),
                             ],
                           ),
                         ),
                       );
                     },
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 15,
-                      horizontal: 20,
-                    ),
-                    child: SwipeButton.expand(
-                      enabled: isCompletePrep,
-                      thumb: const Icon(
-                        Icons.double_arrow_rounded,
-                        color: Colors.white,
-                      ),
-                      activeThumbColor: context.theme.primaryColor,
-                      activeTrackColor: Colors.grey.shade300,
-                      onSwipe: () async {
-                        Get.dialog(Center(
-                          child: LoadingWidget(
-                            size: 60,
-                          ),
-                        ));
-                        for (var e in orderDetails) {
-                          await appController.updateOrderStatus(
-                            orderId: e!.id!,
-                            status: "7",
-                            desc: "",
-                          );
-                        }
-
-                        Get.off(() => PrepDeliveryScreen(
-                              addressList: addressList,
-                              mapData: osrmMapData,
-                              legList: legList,
-                              locationList: locationList,
-                              orders: orderDetails,
-                              currentPosition: currentPosition!,
-                            ));
-                      },
-                      child: Text(
-                        isCompletePrep
-                            ? "Chuẩn bị giao hàng"
-                            : "Còn ${totalProduct - finished.length} sản phẩm",
-                      ),
-                    ),
+                  DeliveryButton(
+                    isCompletePrep: isCompletePrep,
+                    orderDetails: orderDetails,
+                    addressList: addressList,
+                    osrmMapData: osrmMapData,
+                    legList: legList,
+                    locationList: locationList,
+                    currentPosition: currentPosition,
+                    totalProduct: totalProduct,
+                    finished: finished,
                   ),
                 ],
               ),
             ),
+    );
+  }
+
+  DetailContent productList(
+    List<List<OrderProducts>> grouped,
+    List<OrderProducts> products,
+  ) {
+    return DetailContent(
+      title: "Danh sách sản phẩm",
+      haveDivider: false,
+      content: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: grouped.length,
+        itemBuilder: (context, i) {
+          final item = grouped[i];
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 1,
+                      blurRadius: 7,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]),
+              child: ListTile(
+                title: Text(
+                  products[i].productName!,
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ...item.map(
+                      (e) => UnitCheck(
+                        product: e,
+                        onCheck: (v) {
+                          setState(() {
+                            if (v) {
+                              finishOrder(e.id!);
+                            } else {
+                              finished.remove(
+                                e.id,
+                              );
+                              isCompletePrep = finished.length == totalProduct;
+                            }
+                          });
+                        },
+                        value: finished.contains(
+                          e.id,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ).animate().slideX(delay: (i * 80).ms).fade();
+        },
+      ),
     );
   }
 }

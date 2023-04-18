@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/controller/app_controller.dart';
 import 'package:pharmacy_employee/isolate_manager.dart';
+import 'package:pharmacy_employee/models/order_detail.dart';
 import 'package:pharmacy_employee/views/confirm_order.dart/confirm_order.dart';
 import 'package:pharmacy_employee/views/debug/debug_screen.dart';
 import 'package:pharmacy_employee/views/home/home.dart';
@@ -32,7 +33,31 @@ extension DateFormatter on String {
   }
 }
 
-extension DoubleExtensions on int {}
+extension GroupProduct on List<OrderProducts> {
+  List<List<OrderProducts>> groupProductByName() {
+    List<List<OrderProducts>> result = [];
+    List<OrderProducts> temp = [];
+    String currentName = '';
+
+    temp = this;
+    try {
+      temp.sort((a, b) => a.productName!.compareTo(b.productName!));
+    } catch (e) {
+      Get.log("Error Sort Group: $e");
+    }
+
+    for (var product in temp) {
+      if (product.productName != currentName) {
+        currentName = product.productName!;
+        result.add([product]);
+      } else {
+        result.last.add(product);
+      }
+    }
+
+    return result;
+  }
+}
 
 extension PriceConvert on num {
   String convertCurrentcy() {
