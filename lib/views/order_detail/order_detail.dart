@@ -113,7 +113,9 @@ class _OrderDetailState extends State<OrderDetail> {
     } else {
       try {
         id = Get.arguments;
-      } catch (e) {}
+      } catch (e) {
+        debugPrint(e.toString());
+      }
     }
 
     _fetchOrderDetail();
@@ -121,6 +123,10 @@ class _OrderDetailState extends State<OrderDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final font = appController.fontSize;
+    final contactInfo = order.orderContactInfo;
+    final theme = context.theme;
+    final products = order.orderProducts;
     return Scaffold(
       appBar: AppBar(
         title: AutoSizeText(
@@ -142,74 +148,75 @@ class _OrderDetailState extends State<OrderDetail> {
                     DetailContent(
                       title: "Tên Khách Hàng",
                       content: Text(
-                        style:
-                            TextStyle(fontSize: appController.fontSize.value),
+                        style: TextStyle(fontSize: font.value),
                         order.orderContactInfo!.fullname ?? "Khách Vãng Lai",
                       ),
                     ),
-                    if (order.orderContactInfo!.email != null &&
-                        order.orderContactInfo!.email!.isNotEmpty)
+                    if (contactInfo!.email != null &&
+                        contactInfo.email!.isNotEmpty)
                       DetailContent(
                         title: "Email",
                         content: Text(
-                          style:
-                              TextStyle(fontSize: appController.fontSize.value),
+                          style: TextStyle(fontSize: font.value),
                           order.orderContactInfo!.email ?? "Không có email",
                         ),
                       ),
                     DetailContent(
                       title: "Số Điện Thoại",
                       content: Text(
-                          style:
-                              TextStyle(fontSize: appController.fontSize.value),
-                          order.orderContactInfo!.phoneNumber ??
-                              "Không có số điện thoại"),
+                        style: TextStyle(fontSize: font.value),
+                        contactInfo.phoneNumber ?? "Không có số điện thoại",
+                      ),
                     ),
                     if (order.pharmacistId != appController.pharmacist.value.id)
                       DetailContent(
                         title: "Trạng Thái Thực Hiện",
                         content: Text(
                           order.actionStatus!.statusMessage!,
-                          style:
-                              TextStyle(fontSize: appController.fontSize.value),
+                          style: TextStyle(fontSize: font.value),
                         ),
                       ),
                     DetailContent(
-                        title: "Ngày Tạo",
-                        content: Text(
-                            style: TextStyle(
-                                fontSize: appController.fontSize.value),
-                            order.createdDate!.convertToDate)),
+                      title: "Ngày Tạo",
+                      content: Text(
+                        style: TextStyle(
+                          fontSize: font.value,
+                        ),
+                        order.createdDate!.convertToDate,
+                      ),
+                    ),
                     DetailContent(
-                        title: "Loại Đơn Hàng",
-                        content: Text(
-                            style: TextStyle(
-                                fontSize: appController.fontSize.value),
-                            order.orderTypeName!)),
+                      title: "Loại Đơn Hàng",
+                      content: Text(
+                        style: TextStyle(
+                          fontSize: font.value,
+                        ),
+                        order.orderTypeName!,
+                      ),
+                    ),
                     DetailContent(
                       title: "Trạng Thái",
                       content: Text(
                         mapStatus.singleWhere((element) =>
                             element['id'] == order.orderStatus!)['name'],
                         style: TextStyle(
-                          fontSize: appController.fontSize.value,
-                          color: context.theme.primaryColor,
+                          fontSize: font.value,
+                          color: theme.primaryColor,
                         ),
                       ),
                     ),
                     DetailContent(
                       title: "Tổng Tiền",
                       content: Text(
-                          style:
-                              TextStyle(fontSize: appController.fontSize.value),
-                          order.totalPrice!.convertCurrentcy()),
+                        style: TextStyle(fontSize: font.value),
+                        order.totalPrice!.convertCurrentcy(),
+                      ),
                     ),
                     if (order.orderTypeId == 2)
                       DetailContent(
                         title: "Ngày Đến Nhận",
                         content: Text(
-                          style:
-                              TextStyle(fontSize: appController.fontSize.value),
+                          style: TextStyle(fontSize: font.value),
                           order.orderPickUp!.datePickUp!,
                         ),
                       ),
@@ -217,8 +224,7 @@ class _OrderDetailState extends State<OrderDetail> {
                       DetailContent(
                         title: "Khung Giờ Đến Nhận",
                         content: Text(
-                          style:
-                              TextStyle(fontSize: appController.fontSize.value),
+                          style: TextStyle(fontSize: font.value),
                           order.orderPickUp!.timePickUp!,
                         ),
                       ),
@@ -227,15 +233,13 @@ class _OrderDetailState extends State<OrderDetail> {
                         title: "Địa Chỉ",
                         content: Text(
                           order.orderDelivery!.fullyAddress!,
-                          style:
-                              TextStyle(fontSize: appController.fontSize.value),
+                          style: TextStyle(fontSize: font.value),
                         ),
                       ),
                     DetailContent(
                       title: "Ghi Chú",
                       content: Text(
-                          style:
-                              TextStyle(fontSize: appController.fontSize.value),
+                          style: TextStyle(fontSize: font.value),
                           order.note!.length > 1
                               ? order.note!
                               : 'Không có ghi chú'),
@@ -243,18 +247,17 @@ class _OrderDetailState extends State<OrderDetail> {
                     DetailContent(
                       title: "Hình Thức Thanh Toán",
                       content: Text(
-                          style:
-                              TextStyle(fontSize: appController.fontSize.value),
+                          style: TextStyle(fontSize: font.value),
                           order.paymentMethod!),
                     ),
                     if (order.orderProducts!.isNotEmpty)
                       DetailContent(
                         title:
-                            "Danh Sách Sản phẩm: ${order.orderProducts!.length} Sản phẩm",
+                            "Danh Sách Sản phẩm: ${products!.length} Sản phẩm",
                         content: ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: order.orderProducts!.length,
+                          itemCount: products.length,
                           itemBuilder: (context, index) {
                             return ListTile(
                               onTap: () => Get.toNamed(
@@ -263,17 +266,15 @@ class _OrderDetailState extends State<OrderDetail> {
                                     order.orderProducts![index].productId,
                               ),
                               title: Text(
-                                  style: TextStyle(
-                                      fontSize: appController.fontSize.value),
-                                  order.orderProducts![index].productName!),
+                                style: TextStyle(fontSize: font.value),
+                                products[index].productName!,
+                              ),
                               subtitle: Text(
-                                style: TextStyle(
-                                    fontSize: appController.fontSize.value),
-                                "Số Lượng: ${order.orderProducts![index].quantity!} ${order.orderProducts![index].unitName}",
+                                style: TextStyle(fontSize: font.value),
+                                "Số Lượng: ${products[index].quantity!} ${products[index].unitName}",
                               ),
                               trailing: Text(
-                                style: TextStyle(
-                                    fontSize: appController.fontSize.value),
+                                style: TextStyle(fontSize: font.value),
                                 order.orderProducts![index].priceTotal!
                                     .convertCurrentcy(),
                               ),
@@ -293,8 +294,8 @@ class _OrderDetailState extends State<OrderDetail> {
                             Icons.double_arrow_rounded,
                             color: Colors.white,
                           ),
-                          activeThumbColor: context.theme.primaryColor,
-                          activeTrackColor: Colors.grey.shade300,
+                          activeThumbColor: theme.primaryColor,
+                          activeTrackColor: Colors.grey[300],
                           onSwipe: () {
                             Get.toNamed('/order_confirm', arguments: order.id);
                           },

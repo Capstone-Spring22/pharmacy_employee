@@ -86,7 +86,7 @@ class OrderTileDelivery extends StatelessWidget {
               child: const Text("Xử lý"),
             ),
           ],
-        )
+        ),
       ],
     );
   }

@@ -244,8 +244,8 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                         color: Colors.white,
                       ),
                       activeThumbColor: context.theme.primaryColor,
-                      activeTrackColor: Colors.grey.shade300,
-                      onSwipe: () async {
+                      activeTrackColor: Colors.grey[300],
+                      onSwipe: () {
                         appController.updateOrderStatus(
                           orderId: orders[i]!.id!,
                           status: "8",
@@ -256,11 +256,12 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                         locationList.removeAt(i);
                         orders.removeAt(i);
                         appController.triggerOrderLoad();
-                        setState(() {});
-                        if (orders.isEmpty &&
-                            appController.orderProcessList.isEmpty) {
-                          isFinished = true;
-                        }
+                        setState(() {
+                          if (orders.isEmpty &&
+                              appController.orderProcessList.isEmpty) {
+                            isFinished = true;
+                          }
+                        });
                         Get.back();
                       },
                       child: const Text("Hoàn thành đơn hàng"),
@@ -286,8 +287,8 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                         color: Colors.white,
                       ),
                       activeThumbColor: Colors.deepOrange.shade500,
-                      activeTrackColor: Colors.grey.shade300,
-                      onSwipe: () async {
+                      activeTrackColor: Colors.grey[300],
+                      onSwipe: () {
                         if (txt.text.isEmpty) {
                           showSnack(
                             "Thông báo",
@@ -297,20 +298,23 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                           return;
                         } else {
                           appController.updateOrderStatus(
-                              orderId: orders[i]!.id!,
-                              status: "7",
-                              desc: txt.text);
+                            orderId: orders[i]!.id!,
+                            status: "7",
+                            desc: txt.text,
+                          );
                           appController.orderProcessList.removeWhere(
-                              (element) => element == orders[i]!.id);
+                            (element) => element == orders[i]!.id,
+                          );
                           addressList.removeAt(i);
                           locationList.removeAt(i);
                           orders.removeAt(i);
                           appController.triggerOrderLoad();
-                          setState(() {});
-                          if (orders.isEmpty &&
-                              appController.orderProcessList.isEmpty) {
-                            isFinished = true;
-                          }
+                          setState(() {
+                            if (orders.isEmpty &&
+                                appController.orderProcessList.isEmpty) {
+                              isFinished = true;
+                            }
+                          });
                           Get.back();
                         }
                       },
@@ -327,7 +331,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                       ),
                       activeThumbColor: context.theme.colorScheme.error,
                       activeTrackColor: Colors.grey.shade300,
-                      onSwipe: () async {
+                      onSwipe: () {
                         if (txt.text.isEmpty) {
                           showSnack(
                             "Thông báo",
@@ -337,20 +341,23 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                           return;
                         } else {
                           appController.updateOrderStatus(
-                              orderId: orders[i]!.id!,
-                              status: "11",
-                              desc: txt.text);
+                            orderId: orders[i]!.id!,
+                            status: "11",
+                            desc: txt.text,
+                          );
                           appController.orderProcessList.removeWhere(
-                              (element) => element == orders[i]!.id);
+                            (element) => element == orders[i]!.id,
+                          );
                           addressList.removeAt(i);
                           locationList.removeAt(i);
                           orders.removeAt(i);
                           appController.triggerOrderLoad();
-                          setState(() {});
-                          if (orders.isEmpty &&
-                              appController.orderProcessList.isEmpty) {
-                            isFinished = true;
-                          }
+                          setState(() {
+                            if (orders.isEmpty &&
+                                appController.orderProcessList.isEmpty) {
+                              isFinished = true;
+                            }
+                          });
                           Get.back();
                         }
                       },
@@ -559,7 +566,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                 ),
               );
             },
-          )
+          ),
         ],
       ),
     );

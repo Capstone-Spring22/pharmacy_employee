@@ -87,7 +87,8 @@ void main() async {
     switch (tagKey) {
       case "personal_btn":
         debugPrint(
-            "Personal button click : Do what ever you want here. This is inside your application scope");
+          "Personal button click : Do what ever you want here. This is inside your application scope",
+        );
         break;
       case closeBtnTag:
         AppController.closeOverlay();

@@ -19,47 +19,53 @@ class _UserScreenState extends State<UserScreen> {
         title: const Text('Pharmacist'),
         actions: [
           IconButton(
-              onPressed: () => appController.logout(),
-              icon: const Icon(Icons.logout))
+            onPressed: () => appController.logout(),
+            icon: const Icon(Icons.logout),
+          ),
         ],
       ),
       body: SingleChildScrollView(
         child: Obx(
-          () => Column(
-            children: [
-              DetailContent(
-                title: "Tên dược sĩ",
-                haveDivider: false,
-                content: Text(
-                  appController.pharmacist.value.name!,
-                  style: TextStyle(fontSize: appController.fontSize.value),
+          () {
+            final font = appController.fontSize;
+            return Column(
+              children: [
+                DetailContent(
+                  title: "Tên dược sĩ",
+                  haveDivider: false,
+                  content: Text(
+                    appController.pharmacist.value.name!,
+                    style: TextStyle(fontSize: font.value),
+                  ),
                 ),
-              ),
-              // DetailContent(
-              //   title: "Số điện thoại",
-              //   haveDivider: false,
-              //   content: Text(
-              //     appController.pharmacist.value.!,
-              //     style: TextStyle(fontSize: appController.fontSize.value),
-              //   ),
-              // ),
-              CupertinoListTile(
-                title: Text("Font chữ",
-                    style: TextStyle(fontSize: appController.fontSize.value)),
-                trailing: Row(
-                  children: [
-                    IconButton(
+                // DetailContent(
+                //   title: "Số điện thoại",
+                //   haveDivider: false,
+                //   content: Text(
+                //     appController.pharmacist.value.!,
+                //     style: TextStyle(fontSize: appController.fontSize.value),
+                //   ),
+                // ),
+                CupertinoListTile(
+                  title:
+                      Text("Font chữ", style: TextStyle(fontSize: font.value)),
+                  trailing: Row(
+                    children: [
+                      IconButton(
                         onPressed: () => appController.decreaseFontSize(),
-                        icon: const Icon(Icons.remove)),
-                    Text(appController.fontSize.value.toString()),
-                    IconButton(
+                        icon: const Icon(Icons.remove),
+                      ),
+                      Text(appController.fontSize.value.toString()),
+                      IconButton(
                         onPressed: () => appController.increaseFontSize(),
-                        icon: const Icon(Icons.add)),
-                  ],
+                        icon: const Icon(Icons.add),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );

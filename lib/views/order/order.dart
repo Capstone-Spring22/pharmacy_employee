@@ -140,14 +140,16 @@ class _OrderScreenState extends State<OrderScreen>
                                 Get.toNamed('/prep_order');
                               } else {
                                 await Permission.location.request().then(
-                                    (value) => Get.toNamed('/prep_order'));
+                                      (value) => Get.toNamed('/prep_order'),
+                                    );
                               }
                             } else {
                               Get.toNamed('/prep_pickup');
                             }
                           },
                     child: Text(
-                        "Thực hiện ${appController.orderProcessList.length} đơn"),
+                      "Thực hiện ${appController.orderProcessList.length} đơn",
+                    ),
                   ),
                 AnimatedSlide(
                   duration: const Duration(milliseconds: 100),
@@ -174,7 +176,7 @@ class _OrderScreenState extends State<OrderScreen>
                             ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
             body: TabBarView(

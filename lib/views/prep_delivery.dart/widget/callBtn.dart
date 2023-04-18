@@ -24,15 +24,13 @@ class CallButton extends StatelessWidget {
             haveDivider: false,
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(right: 20),
+        const Padding(
+          padding: EdgeInsets.only(right: 20),
           child: CircleAvatar(
-            child: const Icon(Icons.call),
+            child: Icon(Icons.call),
           ),
         )
       ],
     );
   }
-
-  CircleAvatar({required Icon child}) {}
 }

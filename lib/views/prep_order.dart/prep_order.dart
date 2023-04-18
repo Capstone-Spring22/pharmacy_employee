@@ -48,15 +48,16 @@ class _PrepOrderState extends State<PrepOrder> {
       setState(() {
         isLoading = true;
       });
+      List orderProcessList = appController.orderProcessList;
 
       orderDetails = await Future.wait(
-        appController.orderProcessList.map(
+        orderProcessList.map(
           (e) => AppService().fetchOrderDetail(e),
         ),
       );
 
       List<OrderHistoryDetail?> tempOrderDetails = await Future.wait(
-        appController.orderProcessList.map(
+        orderProcessList.map(
           (e) => AppService().fetchOrderDetail(e),
         ),
       );
@@ -178,6 +179,9 @@ class _PrepOrderState extends State<PrepOrder> {
                     shrinkWrap: true,
                     itemCount: appController.orderProcessList.length,
                     itemBuilder: (context, index) {
+                      final contactInfo =
+                          orderDetails[index]!.orderContactInfo!;
+                      final products = orderDetails[index]!.orderProducts!;
                       return Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -208,14 +212,14 @@ class _PrepOrderState extends State<PrepOrder> {
                               DetailContent(
                                 title: "Tên khách hàng",
                                 content: AutoSizeText(
-                                  "${orderDetails[index]!.orderContactInfo!.fullname}",
+                                  "${contactInfo.fullname}",
                                 ),
                                 haveDivider: false,
                               ),
                               DetailContent(
                                 title: "Số điện thoại",
                                 content: AutoSizeText(
-                                  "${orderDetails[index]!.orderContactInfo!.phoneNumber}",
+                                  "${contactInfo.phoneNumber}",
                                 ),
                                 haveDivider: false,
                               ),
@@ -259,9 +263,8 @@ class _PrepOrderState extends State<PrepOrder> {
                                       child: ListTile(
                                         trailing: Checkbox(
                                           value: finished.contains(
-                                              orderDetails[index]!
-                                                  .orderProducts![i]
-                                                  .id),
+                                            products[i].id,
+                                          ),
                                           onChanged: (value) {
                                             if (value!) {
                                               setState(() {
@@ -272,9 +275,8 @@ class _PrepOrderState extends State<PrepOrder> {
                                             } else {
                                               setState(() {
                                                 finished.remove(
-                                                    orderDetails[index]!
-                                                        .orderProducts![i]
-                                                        .id);
+                                                  products[i].id,
+                                                );
                                                 isCompletePrep =
                                                     finished.length ==
                                                         totalProduct;
@@ -282,22 +284,21 @@ class _PrepOrderState extends State<PrepOrder> {
                                             }
                                           },
                                         ),
-                                        title: Text(orderDetails[index]!
-                                            .orderProducts![i]
-                                            .productName!),
+                                        title: Text(
+                                          products[i].productName!,
+                                        ),
                                         subtitle: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              "${orderDetails[index]!.orderProducts![i].quantity} ${orderDetails[index]!.orderProducts![i].unitName} - ${orderDetails[index]!.orderProducts![i].priceTotal!.convertCurrentcy()}",
+                                              "${products[i].quantity} ${products[i].unitName} - ${orderDetails[index]!.orderProducts![i].priceTotal!.convertCurrentcy()}",
                                             ),
                                             AutoSizeText(
-                                              orderDetails[index]!
-                                                      .orderProducts![i]
+                                              products[i]
                                                       .productNoteFromPharmacist ??
                                                   "",
-                                            )
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -350,11 +351,13 @@ class _PrepOrderState extends State<PrepOrder> {
                               currentPosition: currentPosition!,
                             ));
                       },
-                      child: Text(isCompletePrep
-                          ? "Chuẩn bị giao hàng"
-                          : "Còn ${totalProduct - finished.length} sản phẩm"),
+                      child: Text(
+                        isCompletePrep
+                            ? "Chuẩn bị giao hàng"
+                            : "Còn ${totalProduct - finished.length} sản phẩm",
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
