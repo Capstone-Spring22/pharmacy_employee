@@ -46,28 +46,32 @@ class _OrderTabViewState extends State<OrderTabView> {
   Widget build(BuildContext context) {
     String dateRender = "";
     bool isLoading = true;
+    List<OrderHistory> getList() {
+      if (widget.type == 'unAccept') {
+        isLoading = appController.isUnAcceptLoading.value;
+        return appController.orderUnAcceptList;
+      } else if (widget.type == 'active') {
+        isLoading = appController.isActiveLoading.value;
+        return appController.orderActiveList;
+      } else {
+        isLoading = appController.isCantAcceptLoading.value;
+        return appController.orderCantAcceptList;
+      }
+    }
+
     return GetX<AppController>(
       builder: (controller) {
-        List<OrderHistory> list() {
-          if (widget.type == 'unAccept') {
-            isLoading = controller.isUnAcceptLoading.value;
-            return controller.orderUnAcceptList;
-          } else if (widget.type == 'active') {
-            isLoading = controller.isActiveLoading.value;
-            return controller.orderActiveList;
-          } else {
-            isLoading = controller.isCantAcceptLoading.value;
-            return controller.orderCantAcceptList;
-          }
-        }
-
-        if (isLoading && list().isEmpty) {
+        List<OrderHistory> list = getList();
+        bool isProcessMode = appController.isProcessMode.value;
+        final fontSize = appController.fontSize;
+        final theme = context.theme;
+        if (isLoading && list.isEmpty) {
           return Center(
             child: LoadingWidget(
               size: 60,
             ),
           );
-        } else if (!isLoading && list().isEmpty) {
+        } else if (!isLoading && list.isEmpty) {
           return Center(
             child: Text(
               "Không Tìm Thấy Đơn",
@@ -83,19 +87,20 @@ class _OrderTabViewState extends State<OrderTabView> {
                   child: ListView.builder(
                     shrinkWrap: true,
                     controller: widget.scrollController,
-                    itemCount: list().length + 1,
+                    itemCount: list.length + 1,
                     itemBuilder: (context, index) {
-                      if (index < list().length) {
-                        final item = list()[index];
+                      if (index < list.length) {
+                        final item = list[index];
                         bool dif =
                             dateRender == item.createdDate!.convertToDate;
                         if (!dif) {
                           dateRender = item.createdDate!.convertToDate;
                         }
 
-                        if (appController.isProcessMode.isTrue) {
+                        if (isProcessMode) {
                           if (item.orderStatus != '6' &&
-                              item.orderStatus != '3') {
+                              item.orderStatus != '3' &&
+                              item.orderStatus != '7') {
                             return Container();
                           }
                         }
@@ -164,17 +169,18 @@ class _OrderTabViewState extends State<OrderTabView> {
                                         Text(
                                           dateRender,
                                           style: TextStyle(
-                                              fontSize:
-                                                  appController.fontSize.value),
+                                            fontSize:
+                                                appController.fontSize.value,
+                                          ),
                                         ),
                                       Obx(() => AnimatedContainer(
                                             duration: const Duration(
-                                                milliseconds: 100),
+                                              milliseconds: 100,
+                                            ),
                                             width: double.infinity,
                                             decoration: BoxDecoration(
                                               border: Border.all(
-                                                color:
-                                                    context.theme.primaryColor,
+                                                color: theme.primaryColor,
                                               ),
                                               borderRadius:
                                                   BorderRadius.circular(10),
@@ -183,7 +189,7 @@ class _OrderTabViewState extends State<OrderTabView> {
                                                   ? appController
                                                           .orderProcessList
                                                           .contains(item.id)
-                                                      ? context.theme
+                                                      ? theme
                                                           .secondaryHeaderColor
                                                       : Colors.transparent
                                                   : Colors.transparent,
@@ -194,37 +200,35 @@ class _OrderTabViewState extends State<OrderTabView> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  "Tình Trạng: ${item.orderStatusName}",
+                                                  "Tình Trạng: ${item.orderStatusName} - ${item.orderStatus}",
                                                   style: TextStyle(
-                                                    fontSize: appController
-                                                        .fontSize.value,
-                                                    color: context
-                                                        .theme.primaryColor,
+                                                    fontSize: fontSize.value,
+                                                    color: theme.primaryColor,
                                                   ),
                                                 ),
                                                 Text(
                                                   "Ngày Tạo: ${item.createdDate!.convertToDate}",
                                                   style: TextStyle(
-                                                      fontSize: appController
-                                                          .fontSize.value),
+                                                    fontSize: fontSize.value,
+                                                  ),
                                                 ),
                                                 Text(
                                                   "Loại Đơn: ${item.orderTypeName}",
                                                   style: TextStyle(
-                                                      fontSize: appController
-                                                          .fontSize.value),
+                                                    fontSize: fontSize.value,
+                                                  ),
                                                 ),
                                                 Text(
                                                   item.paymentMethod.toString(),
                                                   style: TextStyle(
-                                                      fontSize: appController
-                                                          .fontSize.value),
+                                                    fontSize: fontSize.value,
+                                                  ),
                                                 ),
                                                 Text(
                                                   "Tổng Tiền: ${item.totalPrice!.convertCurrentcy()}",
                                                   style: TextStyle(
-                                                      fontSize: appController
-                                                          .fontSize.value),
+                                                    fontSize: fontSize.value,
+                                                  ),
                                                 ),
                                               ],
                                             ),

@@ -47,8 +47,12 @@ class AppService {
     }
   }
 
-  Future fetchOrder(int page, bool isAccept, bool isOnlyPharmacist,
-      {int count = 10}) async {
+  Future fetchOrder(
+    int page,
+    bool isAccept,
+    bool isOnlyPharmacist, {
+    int count = 10,
+  }) async {
     try {
       var res = await dio.get(
         '$api/Order',
@@ -61,11 +65,7 @@ class AppService {
         options: appController.options,
       );
 
-      if (res.statusCode == 200) {
-        return res.data;
-      } else {
-        return null;
-      }
+      return res.statusCode == 200 ? res.data : null;
     } on DioError catch (e) {
       Get.log(e.message.toString());
 
@@ -82,11 +82,9 @@ class AppService {
       'pageItems': 10,
     });
 
-    if (res.statusCode == 200) {
-      return List<Site>.from(res.data['items'].map((e) => Site.fromJson(e)));
-    } else {
-      return [];
-    }
+    return res.statusCode == 200
+        ? List.from(res.data['items'].map((e) => Site.fromJson(e)))
+        : [];
   }
 
   Future lookupProduct(String name, int page) async {
@@ -97,11 +95,7 @@ class AppService {
         'pageItems': 10,
       });
 
-      if (res.statusCode == 200) {
-        return res.data;
-      } else {
-        return null;
-      }
+      return res.statusCode == 200 ? res.data : null;
     } on DioError catch (e) {
       Get.log(e.response.toString());
     }
@@ -109,14 +103,12 @@ class AppService {
 
   Future fetchProductDetail(String id) async {
     try {
-      var res = await dio.get('$api/Product/View/$id',
-          options: appController.options);
+      var res = await dio.get(
+        '$api/Product/View/$id',
+        options: appController.options,
+      );
 
-      if (res.statusCode == 200) {
-        return res.data;
-      } else {
-        return null;
-      }
+      return res.statusCode == 200 ? res.data : null;
     } on DioError catch (e) {
       Get.log(e.response.toString());
     }
@@ -125,26 +117,27 @@ class AppService {
   Future<OrderHistoryDetail?> fetchOrderDetail(String id) async {
     try {
       var res = await dio.get('$api/Order/$id', options: appController.options);
+      Get.log(res.data.toString());
+
       return OrderHistoryDetail.fromJson(res.data);
     } on DioError catch (e) {
       Get.log(e.response.toString());
     }
+
     return null;
   }
 
   Future fetchOrderStatus(num id) async {
     try {
-      var res = await dio.get('$api/OrderStatus',
-          queryParameters: {
-            'OrderTypeId': id,
-          },
-          options: appController.options);
+      var res = await dio.get(
+        '$api/OrderStatus',
+        queryParameters: {
+          'OrderTypeId': id,
+        },
+        options: appController.options,
+      );
 
-      if (res.statusCode == 200) {
-        return res.data;
-      } else {
-        return null;
-      }
+      return res.statusCode == 200 ? res.data : null;
     } on DioError catch (e) {
       Get.log(e.response.toString());
     }
@@ -155,10 +148,14 @@ class AppService {
       var res = await dio.put(
         '${api}Order/UpdateOrderProductNote',
         data: [
-          {"orderDetailId": id, "note": note}
+          {
+            "orderDetailId": id,
+            "note": note,
+          },
         ],
         options: appController.options,
       );
+
       return res.statusCode;
     } on DioError catch (e) {
       Get.log(e.response!.statusMessage.toString());
@@ -168,6 +165,7 @@ class AppService {
   Future fetchIpAddress() async {
     try {
       var res = await dio.get('https://api.ipify.org/?format=json');
+
       return res.data['ip'];
     } on DioError catch (e) {
       Get.log(e.response.toString());
@@ -177,14 +175,16 @@ class AppService {
   Future acceptOrder(String orderId, bool isAccept, {String desc = ""}) async {
     try {
       var ip = await fetchIpAddress();
-      var res = await dio.put('${api}Order/ValidateOrder',
-          options: appController.options,
-          data: {
-            "orderId": orderId,
-            "isAccept": isAccept,
-            "description": desc,
-            "ipAddress": ip
-          });
+      var res = await dio.put(
+        '${api}Order/ValidateOrder',
+        options: appController.options,
+        data: {
+          "orderId": orderId,
+          "isAccept": isAccept,
+          "description": desc,
+          "ipAddress": ip
+        },
+      );
       return res.statusCode;
     } on DioError catch (e) {
       Get.log("Response: ${e.response!.data.toString()}");
@@ -255,36 +255,6 @@ class AppService {
   //   return {};
   // }
 
-  Future<List<PolylinePoint>?> getOptimizeRoute(
-      Position currentPosition, List<Location> listDestinationLocation) async {
-    List<String> latLngList = [
-      "${currentPosition.latitude},${currentPosition.longitude}",
-      ...listDestinationLocation
-          .map((waypoint) => "${waypoint.latitude},${waypoint.longitude}")
-    ];
-
-    final georouter = GeoRouter(mode: TravelMode.driving);
-
-    final coordinates = [
-      PolylinePoint(
-          latitude: currentPosition.latitude,
-          longitude: currentPosition.longitude),
-      ...listDestinationLocation.map(
-          (e) => PolylinePoint(latitude: e.latitude, longitude: e.longitude)),
-    ];
-    try {
-      final directions =
-          await georouter.getDirectionsBetweenPoints(coordinates);
-      Get.log(directions.toString());
-      return directions;
-    } on GeoRouterException {
-// Handle GeoRouterException
-    } on HttpException {
-// Handle HttpException
-    }
-    return null;
-  }
-
   static List<PolylinePoint> decodePolyline(String encoded) {
     final List<PolylinePoint> points = <PolylinePoint>[];
     int index = 0, len = encoded.length;
@@ -320,6 +290,32 @@ class AppService {
     return points;
   }
 
+  Future<Map<String, dynamic>> getRouteBySort(
+      Position currentPosition, List<Location> listDestinationLocation,
+      {bool roundTrip = false}) async {
+    final List listCoor = [
+      "${currentPosition.longitude},${currentPosition.latitude}",
+      ...listDestinationLocation
+          .map((e) => "${e.longitude},${e.latitude}")
+          .toList()
+    ];
+    String joinedCoor = listCoor.join(';');
+    Get.log(joinedCoor);
+    Response res;
+    try {
+      res = await dio.get(
+          'http://router.project-osrm.org/route/v1/driving/$joinedCoor',
+          queryParameters: {
+            'steps': true,
+          });
+
+      return res.data;
+    } on DioError catch (e) {
+      Get.log(e.response.toString());
+    }
+    return {};
+  }
+
   Future<Map<String, dynamic>> getOptimizeDistance(
       Position currentPosition, List<Location> listDestinationLocation,
       {bool roundTrip = false}) async {
@@ -342,8 +338,8 @@ class AppService {
           });
 
       return res.data;
-    } catch (e) {
-      Get.log(e.toString());
+    } on DioError catch (e) {
+      Get.log(e.response.toString());
     }
     return {};
   }

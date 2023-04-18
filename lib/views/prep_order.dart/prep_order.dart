@@ -35,6 +35,7 @@ class _PrepOrderState extends State<PrepOrder> {
   List<String> addressList = [];
   List<Location> locationList = [];
   List<Leg> legList = [];
+  Map<String, dynamic> osrmMapData = {};
 
   @override
   void initState() {
@@ -81,17 +82,17 @@ class _PrepOrderState extends State<PrepOrder> {
       }
 
       //Get fastest route
-      var data = await AppService()
+      osrmMapData = await AppService()
           .getOptimizeDistance(currentPosition!, locationList);
 
       List<Waypoint> wayPointList = [];
-      for (final i in data['waypoints']) {
+      for (final i in osrmMapData['waypoints']) {
         wayPointList.add(Waypoint.fromJson(i));
       }
 
       orderDetails = rearrangeList(tempOrderDetails, wayPointList);
       legList.clear();
-      for (var itm in data['trips'][0]['legs']) {
+      for (var itm in osrmMapData['trips'][0]['legs']) {
         legList.add(Leg.fromJson(itm));
       }
 
@@ -340,9 +341,10 @@ class _PrepOrderState extends State<PrepOrder> {
                           );
                         }
 
-                        Get.to(() => PrepDeliveryScreen(
+                        Get.off(() => PrepDeliveryScreen(
                               addressList: addressList,
-                              distance: const [],
+                              mapData: osrmMapData,
+                              legList: legList,
                               locationList: locationList,
                               orders: orderDetails,
                               currentPosition: currentPosition!,

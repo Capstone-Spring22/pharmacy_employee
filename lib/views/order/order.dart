@@ -99,90 +99,93 @@ class _OrderScreenState extends State<OrderScreen>
         return true;
       },
       child: Obx(
-        () => Scaffold(
-          floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              var res = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SimpleBarcodeScannerPage(),
-                  ));
-              setState(() {
-                if (res is String) {
-                  if (res != "-1") {
-                    Get.toNamed('/order_detail', arguments: res);
+        () {
+          var tabController = appController.orderTabController;
+          return Scaffold(
+            floatingActionButton: FloatingActionButton(
+              onPressed: () async {
+                var res = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SimpleBarcodeScannerPage(),
+                    ));
+                setState(() {
+                  if (res is String) {
+                    if (res != "-1") {
+                      Get.toNamed('/order_detail', arguments: res);
+                    }
                   }
-                }
-              });
-            },
-            child: const Icon(Icons.barcode_reader),
-          ),
-          appBar: AppBar(
-            title: const Text("Đơn hàng"),
-            bottom: TabBar(
-              controller: appController.orderTabController.value,
-              tabs: const [
-                Tab(text: "Đơn đã nhận"),
-                Tab(text: "Đơn cần xử lý"),
+                });
+              },
+              child: const Icon(Icons.barcode_reader),
+            ),
+            appBar: AppBar(
+              title: const Text("Đơn hàng"),
+              bottom: TabBar(
+                controller: tabController.value,
+                tabs: const [
+                  Tab(text: "Đơn đã nhận"),
+                  Tab(text: "Đơn cần xử lý"),
+                ],
+              ),
+              actions: [
+                if (appController.isProcessMode.isTrue)
+                  TextButton(
+                    onPressed: appController.orderProcessList.isEmpty
+                        ? null
+                        : () async {
+                            if (appController.orderType.value ==
+                                "Giao hàng tận nơi") {
+                              if (await Permission.location.isGranted) {
+                                Get.toNamed('/prep_order');
+                              } else {
+                                await Permission.location.request().then(
+                                    (value) => Get.toNamed('/prep_order'));
+                              }
+                            } else {
+                              Get.toNamed('/prep_pickup');
+                            }
+                          },
+                    child: Text(
+                        "Thực hiện ${appController.orderProcessList.length} đơn"),
+                  ),
+                AnimatedSlide(
+                  duration: const Duration(milliseconds: 100),
+                  offset: offset,
+                  child: TextButton(
+                    onPressed: () {
+                      if (appController.isProcessMode.isTrue) {
+                        appController.isProcessMode.value = false;
+                      } else {
+                        appController.isProcessMode.toggle();
+                      }
+                    },
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: appController.isProcessMode.isTrue
+                          ? const Text(
+                              "Đóng",
+                              style: TextStyle(color: Colors.red),
+                            )
+                          : Text(
+                              "Chọn đơn thực hiện",
+                              style:
+                                  TextStyle(color: context.theme.primaryColor),
+                            ),
+                    ),
+                  ),
+                )
               ],
             ),
-            actions: [
-              if (appController.isProcessMode.isTrue)
-                TextButton(
-                  onPressed: appController.orderProcessList.isEmpty
-                      ? null
-                      : () async {
-                          if (appController.orderType.value ==
-                              "Giao hàng tận nơi") {
-                            if (await Permission.location.isGranted) {
-                              Get.toNamed('/prep_order');
-                            } else {
-                              await Permission.location
-                                  .request()
-                                  .then((value) => Get.toNamed('/prep_order'));
-                            }
-                          } else {
-                            Get.toNamed('/prep_pickup');
-                          }
-                        },
-                  child: Text(
-                      "Thực hiện ${appController.orderProcessList.length} đơn"),
-                ),
-              AnimatedSlide(
-                duration: const Duration(milliseconds: 100),
-                offset: offset,
-                child: TextButton(
-                  onPressed: () {
-                    if (appController.isProcessMode.isTrue) {
-                      appController.isProcessMode.value = false;
-                    } else {
-                      appController.isProcessMode.toggle();
-                    }
-                  },
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: appController.isProcessMode.isTrue
-                        ? const Text(
-                            "Đóng",
-                            style: TextStyle(color: Colors.red),
-                          )
-                        : Text(
-                            "Chọn đơn thực hiện",
-                            style: TextStyle(color: context.theme.primaryColor),
-                          ),
-                  ),
-                ),
-              )
-            ],
-          ),
-          body: TabBarView(
-            controller: appController.orderTabController.value,
-            children: [
-              OrderTabView(unAcceptTabScroll, 'active'),
-              OrderTabView(unAcceptTabScroll, 'unAccept'),
-            ],
-          ),
-        ),
+            body: TabBarView(
+              controller: appController.orderTabController.value,
+              children: [
+                OrderTabView(unAcceptTabScroll, 'active'),
+                OrderTabView(unAcceptTabScroll, 'unAccept'),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

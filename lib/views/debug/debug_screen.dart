@@ -43,7 +43,6 @@ class _DebugScreenState extends State<DebugScreen> {
 
   late GoogleMapController mapController;
 
-  Polyline? routePolyline;
   final Set<Marker> _markers = {};
   bool isQueryRoute = false;
   bool isFinished = false;
@@ -219,18 +218,19 @@ class _DebugScreenState extends State<DebugScreen> {
                   ),
                 ),
                 Expanded(
-                    child: ListView.builder(
-                  itemCount: orderDetails.length,
-                  itemBuilder: (context, index) {
-                    final item = orderDetails[index];
-                    return ListTile(
-                      title: Text(item!.orderDelivery!.fullyAddress!),
-                      subtitle: Text(
-                        "Khoảng cách: ${legList[index].distance!.toInt().toKilometers()}",
-                      ),
-                    );
-                  },
-                )),
+                  child: ListView.builder(
+                    itemCount: orderDetails.length,
+                    itemBuilder: (context, index) {
+                      final item = orderDetails[index];
+                      return ListTile(
+                        title: Text(item!.orderDelivery!.fullyAddress!),
+                        subtitle: Text(
+                          "Khoảng cách: ${legList[index].distance!.toInt().toKilometers()}",
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
     );

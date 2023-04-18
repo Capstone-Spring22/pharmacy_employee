@@ -16,6 +16,7 @@ class Input extends StatelessWidget {
   final bool expands;
   final bool autofocus;
   final double txtHeight;
+  final bool isFormField;
   const Input({
     Key? key,
     required this.inputController,
@@ -32,10 +33,14 @@ class Input extends StatelessWidget {
     this.txtHeight = 50,
     this.autofocus = false,
     this.maxLines = 1,
+    this.isFormField = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final txtTheme = context.textTheme;
+    final theme = context.theme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -48,10 +53,11 @@ class Input extends StatelessWidget {
             height: txtHeight,
             decoration: BoxDecoration(boxShadow: [
               BoxShadow(
-                  offset: const Offset(12, 26),
-                  blurRadius: 50,
-                  spreadRadius: 0,
-                  color: Colors.grey.withOpacity(.1)),
+                offset: const Offset(12, 26),
+                blurRadius: 50,
+                spreadRadius: 0,
+                color: Colors.grey.withOpacity(.1),
+              ),
             ]),
             child: TextField(
               textInputAction: inputAction,
@@ -63,7 +69,7 @@ class Input extends StatelessWidget {
               controller: inputController,
               onChanged: onChanged,
               keyboardType: inputType ?? TextInputType.text,
-              style: context.textTheme.bodyLarge,
+              style: txtTheme.bodyLarge,
               maxLines: maxLines,
               autofocus: autofocus,
               decoration: InputDecoration(
@@ -78,27 +84,29 @@ class Input extends StatelessWidget {
                 filled: true,
                 hintText: hint,
                 hintStyle: context.textTheme.labelMedium,
-                fillColor: context.theme.secondaryHeaderColor,
+                fillColor: theme.secondaryHeaderColor,
                 contentPadding:
                     const EdgeInsets.symmetric(vertical: 0.0, horizontal: 20.0),
                 border: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: context.theme.primaryColor, width: 1.0),
+                  borderSide: BorderSide(color: theme.primaryColor, width: 1.0),
                   borderRadius: const BorderRadius.all(Radius.circular(10.0)),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: context.theme.primaryColor, width: 1.0),
+                  borderSide: BorderSide(color: theme.primaryColor, width: 1.0),
                   borderRadius: const BorderRadius.all(Radius.circular(10.0)),
                 ),
                 errorBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: context.theme.colorScheme.error, width: 1.0),
+                    color: context.theme.colorScheme.error,
+                    width: 1.0,
+                  ),
                   borderRadius: const BorderRadius.all(Radius.circular(10.0)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: context.theme.secondaryHeaderColor, width: 1.0),
+                    color: context.theme.secondaryHeaderColor,
+                    width: 1.0,
+                  ),
                   borderRadius: const BorderRadius.all(Radius.circular(10.0)),
                 ),
               ),

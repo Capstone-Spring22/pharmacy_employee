@@ -12,7 +12,6 @@ import 'package:pharmacy_employee/controller/app_controller.dart';
 import 'package:pharmacy_employee/isolate_manager.dart';
 import 'package:pharmacy_employee/views/confirm_order.dart/confirm_order.dart';
 import 'package:pharmacy_employee/views/debug/debug_screen.dart';
-import 'package:pharmacy_employee/views/demo_scr/demo.dart';
 import 'package:pharmacy_employee/views/home/home.dart';
 import 'package:pharmacy_employee/views/login/login.dart';
 import 'package:pharmacy_employee/views/lookup/lookup.dart';
@@ -87,7 +86,7 @@ void main() async {
     String value = tag.split('-')[1];
     switch (tagKey) {
       case "personal_btn":
-        print(
+        debugPrint(
             "Personal button click : Do what ever you want here. This is inside your application scope");
         break;
       case closeBtnTag:
@@ -127,7 +126,6 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/prep_order', page: () => const PrepOrder()),
         GetPage(name: '/order_detail', page: () => const OrderDetail()),
         GetPage(name: '/order_confirm', page: () => const ConfirmOrderScreen()),
-        GetPage(name: '/demo', page: () => const DemoScreen()),
         GetPage(
           name: '/order_view',
           page: () => const OrderScreen(),

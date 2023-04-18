@@ -83,14 +83,14 @@ class _ProductLookupState extends State<ProductLookup> {
       ),
       body: GetX<AppController>(
         builder: (controller) {
-          if (controller.isLoading.isTrue && controller.productList.isEmpty) {
+          var list = controller.productList;
+          if (controller.isLoading.isTrue && list.isEmpty) {
             return Center(
               child: LoadingWidget(
                 size: 60,
               ),
             );
-          } else if (controller.isLoading.isFalse &&
-              controller.productList.isEmpty) {
+          } else if (controller.isLoading.isFalse && list.isEmpty) {
             return const Center(
               child: Text("Không Tìm Thấy Sản Phẩm Nào"),
             );

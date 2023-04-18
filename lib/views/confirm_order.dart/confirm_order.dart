@@ -51,6 +51,7 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
       context: context,
       builder: (context) {
         FocusNode focusNode = FocusNode();
+        final theme = context.textTheme;
         return SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.only(
@@ -66,7 +67,7 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
               children: [
                 Text(
                   isAccept ? "Nhận đơn hàng" : "Từ chối đơn hàng",
-                  style: context.textTheme.headlineSmall,
+                  style: theme.headlineSmall,
                 ),
                 Input(
                   inputController: inputController,
@@ -166,6 +167,10 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final font = appController.fontSize;
+    final orderContactInfo = order.orderContactInfo;
+    final orderAction = order.actionStatus;
+    final txtTheme = context.textTheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text("Xác Nhận Đơn Hàng"),
@@ -182,23 +187,23 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                   DetailContent(
                     title: "Tên Khách Hàng",
                     content: Text(
-                        style:
-                            TextStyle(fontSize: appController.fontSize.value),
-                        order.orderContactInfo!.fullname!),
+                      style: TextStyle(fontSize: font.value),
+                      order.orderContactInfo!.fullname!,
+                    ),
                   ),
-                  if (order.orderContactInfo!.email != null &&
-                      order.orderContactInfo!.email!.isNotEmpty)
+                  if (orderContactInfo!.email != null &&
+                      orderContactInfo.email!.isNotEmpty)
                     DetailContent(
                       title: "Email",
                       content: Text(
-                        style:
-                            TextStyle(fontSize: appController.fontSize.value),
+                        style: TextStyle(fontSize: font.value),
                         order.orderContactInfo!.email ?? "Không có email",
                       ),
                     ),
                   GestureDetector(
-                    onTap: () async => await launchUrl(Uri.parse(
-                        "tel://${order.orderContactInfo!.phoneNumber}")),
+                    onTap: () async => await launchUrl(
+                      Uri.parse("tel://${order.orderContactInfo!.phoneNumber}"),
+                    ),
                     child: DetailContent(
                       title: "Số Điện Thoại",
                       content: Row(
@@ -206,12 +211,14 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                         children: [
                           Text(
                             style: TextStyle(
-                              fontSize: appController.fontSize.value,
+                              fontSize: font.value,
                               color: Colors.blue,
                             ),
                             order.orderContactInfo!.phoneNumber!,
                           ),
-                          const CircleAvatar(child: Icon(Icons.call))
+                          const CircleAvatar(
+                            child: Icon(Icons.call),
+                          )
                         ],
                       ),
                     ),
@@ -220,15 +227,14 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                     DetailContent(
                       title: "Địa Chỉ",
                       content: Text(
-                        style:
-                            TextStyle(fontSize: appController.fontSize.value),
+                        style: TextStyle(fontSize: font.value),
                         order.orderDelivery!.fullyAddress!,
                       ),
                     ),
                   DetailContent(
                     title: "Tổng Tiền",
                     content: Text(
-                      style: TextStyle(fontSize: appController.fontSize.value),
+                      style: TextStyle(fontSize: font.value),
                       order.totalPrice!.convertCurrentcy(),
                     ),
                   ),
@@ -251,13 +257,13 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                     child: SwipeButton.expand(
-                      enabled: order.actionStatus!.canAccept!,
+                      enabled: orderAction!.canAccept!,
                       thumb: const Icon(
                         Icons.double_arrow_rounded,
                         color: Colors.white,
                       ),
                       activeThumbColor: context.theme.primaryColor,
-                      activeTrackColor: Colors.grey.shade300,
+                      activeTrackColor: Colors.grey[300],
                       onSwipe: () async {
                         if (order.pharmacistId == null) {
                           await showDig(true);
@@ -265,7 +271,7 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                       },
                       child: Text(
                         "Nhận đơn này",
-                        style: context.textTheme.headlineSmall,
+                        style: txtTheme.headlineSmall,
                       ),
                     ),
                   ),

@@ -24,12 +24,7 @@ class AppController extends GetxController {
   static closeOverlay() async {
     await SystemAlertWindow.closeSystemWindow(
       prefMode: SystemWindowPrefMode.OVERLAY,
-    ).then((value) async {
-      // await Future.delayed(const Duration(milliseconds: 500));
-      // SystemNavigator.pop();
-      // const url = 'betterhealth_employee.capstone://home';
-      // await launchUrl(Uri.parse(url));
-    });
+    );
   }
 
   callBtnOverlay(String phone) async {
@@ -142,7 +137,7 @@ class AppController extends GetxController {
     }
   }
 
-  setupUser() async {
+  setupUser() {
     isLogin.value = true;
 
     options = Options(headers: {
@@ -170,8 +165,7 @@ class AppController extends GetxController {
       JwtDecoder.decode(pharmacist.value.token!);
 
   Future<List<Site>> fetchAllSite() async {
-    final result = await AppService().fetchAllSite();
-    return result;
+    return await AppService().fetchAllSite();
   }
 
   Future initLookup(String name, int page) async {
@@ -185,11 +179,12 @@ class AppController extends GetxController {
       "totalRecord": result['totalRecord'],
       "totalPage": result['totalPage'],
       "hasNextPage": result['hasNextPage'],
-      "hasPreviousPage": result['hasPreviousPage']
+      "hasPreviousPage": result['hasPreviousPage'],
     };
     productHaveNext.value = result['hasNextPage'];
 
     isLoading.value = false;
+
     return map;
   }
 
@@ -198,7 +193,7 @@ class AppController extends GetxController {
   }
 
   Future triggerOrderLoad() async {
-    Future.wait([
+    await Future.wait([
       //unaccept
       initOrder(1, true, 'unAccept', isNew: true),
       //active
@@ -287,22 +282,26 @@ class AppController extends GetxController {
         break;
       default:
     }
+
     return map;
   }
 
   void launchMaps(String address) async {
     String googleUrl =
         'https://www.google.com/maps/search/?api=1&query=$address';
-    if (!await launchUrl(Uri.parse(googleUrl),
-        mode: LaunchMode.externalApplication)) {
+    if (!await launchUrl(
+      Uri.parse(googleUrl),
+      mode: LaunchMode.externalApplication,
+    )) {
       throw Exception('Could not launch $googleUrl');
     }
   }
 
   void startDelivery(OrderHistoryDetail order) {
+    final contactInfo = order.orderContactInfo!;
     SystemWindowHeader header = SystemWindowHeader(
       title: SystemWindowText(
-        text: "${order.orderContactInfo!.fullname}",
+        text: "${contactInfo.fullname}",
         fontSize: 20,
         textColor: Colors.black87,
       ),
@@ -322,10 +321,11 @@ class AppController extends GetxController {
           columns: [
             EachColumn(
               text: SystemWindowText(
-                  text:
-                      "Số tiền cần thu: ${order.totalPrice!.convertCurrentcy()}",
-                  fontSize: 20,
-                  textColor: Colors.black),
+                text:
+                    "Số tiền cần thu: ${order.totalPrice!.convertCurrentcy()}",
+                fontSize: 20,
+                textColor: Colors.black,
+              ),
             ),
           ],
           gravity: ContentGravity.CENTER,
@@ -334,9 +334,10 @@ class AppController extends GetxController {
           columns: [
             EachColumn(
               text: SystemWindowText(
-                  text: "Tổng số lượng hàng: ${order.orderProducts!.length}",
-                  fontSize: 20,
-                  textColor: Colors.black),
+                text: "Tổng số lượng hàng: ${order.orderProducts!.length}",
+                fontSize: 20,
+                textColor: Colors.black,
+              ),
             ),
           ],
           gravity: ContentGravity.CENTER,
@@ -344,14 +345,14 @@ class AppController extends GetxController {
       ],
       padding: SystemWindowPadding(left: 16, right: 16, bottom: 12, top: 12),
     );
-
+    final themeContext = Get.context!.theme;
     SystemWindowFooter footer = SystemWindowFooter(
       buttons: [
         SystemWindowButton(
           text: SystemWindowText(
             text: "Tắt Overlay",
             fontSize: 12,
-            textColor: Get.context!.theme.primaryColor,
+            textColor: themeContext.primaryColor,
           ),
           tag: "$closeBtnTag-0",
           padding: SystemWindowPadding(
@@ -385,12 +386,12 @@ class AppController extends GetxController {
           ),
           height: SystemWindowButton.WRAP_CONTENT,
           decoration: SystemWindowDecoration(
-            startColor: Get.context!.theme.primaryColor,
-            endColor: Get.context!.theme.secondaryHeaderColor,
+            startColor: themeContext.primaryColor,
+            endColor: themeContext.secondaryHeaderColor,
             borderWidth: 0,
             borderRadius: 30.0,
           ),
-        )
+        ),
       ],
       padding: SystemWindowPadding(
         left: 16,
@@ -432,10 +433,11 @@ class AppController extends GetxController {
     }
   }
 
-  Future updateOrderStatus(
-      {required String orderId,
-      required String status,
-      String desc = ""}) async {
+  Future updateOrderStatus({
+    required String orderId,
+    required String status,
+    String desc = "",
+  }) async {
     try {
       var res = await AppService().updateOrderStatus(orderId, status, desc);
       Get.log(res.toString());

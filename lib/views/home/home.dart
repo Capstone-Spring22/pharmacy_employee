@@ -19,45 +19,43 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: SizedBox(
         height: Get.height * .05,
         child: FutureBuilder(
-            future: appController.fetchAllSite(),
-            builder: (_, snap) {
-              appController.siteList.clear();
-              if (snap.connectionState == ConnectionState.done) {
-                appController.siteList.addAll(snap.data!);
-              }
-              if (snap.connectionState == ConnectionState.waiting) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: const LinearProgressIndicator(),
+          future: appController.fetchAllSite(),
+          builder: (_, snap) {
+            appController.siteList.clear();
+            if (snap.connectionState == ConnectionState.done) {
+              appController.siteList.addAll(snap.data!);
+            }
+            if (snap.connectionState == ConnectionState.waiting) {
+              return Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: const LinearProgressIndicator(),
+              );
+            }
+            return Obx(
+              () {
+                final site = appController.getSiteById(
+                  appController.pharmaTokenDecode()['SiteID'],
                 );
-              }
-              return Obx(() {
-                if (appController.siteList.isNotEmpty) {
-                  return Column(
-                    children: [
-                      AutoSizeText(
-                        appController
-                            .getSiteById(
-                                appController.pharmaTokenDecode()['SiteID'])
-                            .siteName!,
-                        maxLines: 1,
-                        style: const TextStyle(color: Colors.black45),
-                      ),
-                      AutoSizeText(
-                        appController
-                            .getSiteById(
-                                appController.pharmaTokenDecode()['SiteID'])
-                            .fullyAddress!,
-                        maxLines: 1,
-                        style: const TextStyle(color: Colors.black45),
-                      ),
-                    ],
-                  );
-                } else {
-                  return Container();
-                }
-              });
-            }),
+                return appController.siteList.isNotEmpty
+                    ? Column(
+                        children: [
+                          AutoSizeText(
+                            site.siteName!,
+                            maxLines: 1,
+                            style: const TextStyle(color: Colors.black45),
+                          ),
+                          AutoSizeText(
+                            site.fullyAddress!,
+                            maxLines: 1,
+                            style: const TextStyle(color: Colors.black45),
+                          ),
+                        ],
+                      )
+                    : Container();
+              },
+            );
+          },
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -76,13 +74,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Hero(
                         tag: "logoTag",
-                        child: GestureDetector(
-                          onTap: () {},
-                          child: Image.asset(
-                            'assets/icon.png',
-                            height: Get.height * .15,
-                            width: Get.height * .15,
-                          ),
+                        child: Image.asset(
+                          'assets/icon.png',
+                          height: Get.height * .15,
+                          width: Get.height * .15,
                         ),
                       ),
                       AnimatedTextKit(
@@ -96,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontSize: 25,
                               color: context.theme.primaryColor,
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ],
@@ -123,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           "Tìm Sản Phẩm",
                           style: TextStyle(color: Colors.white),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -131,52 +126,54 @@ class _HomeScreenState extends State<HomeScreen> {
                 InkWell(
                   onTap: () => Get.toNamed("/order_view"),
                   child: Container(
-                      width: Get.width * 0.6,
-                      height: Get.height * 0.2,
-                      padding: const EdgeInsets.all(30),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.blue[200],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: const [
-                          Icon(
-                            Icons.shopping_cart,
-                            size: 50,
-                            color: Colors.white,
-                          ),
-                          Text(
-                            "Đơn Hàng",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      )),
+                    width: Get.width * 0.6,
+                    height: Get.height * 0.2,
+                    padding: const EdgeInsets.all(30),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.blue[200],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: const [
+                        Icon(
+                          Icons.shopping_cart,
+                          size: 50,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          "Đơn Hàng",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 InkWell(
                   onTap: () => Get.toNamed('/user'),
                   child: Container(
-                      width: Get.width * 0.6,
-                      height: Get.height * 0.2,
-                      padding: const EdgeInsets.all(30),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.blue[200],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: const [
-                          Icon(
-                            Icons.person,
-                            size: 50,
-                            color: Colors.white,
-                          ),
-                          Text(
-                            "Nhân Viên",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      )),
+                    width: Get.width * 0.6,
+                    height: Get.height * 0.2,
+                    padding: const EdgeInsets.all(30),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.blue[200],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: const [
+                        Icon(
+                          Icons.person,
+                          size: 50,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          "Nhân Viên",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
