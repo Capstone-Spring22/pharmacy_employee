@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
+import 'package:msh_checkbox/msh_checkbox.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/controller/app_controller.dart';
 import 'package:pharmacy_employee/helpers/loading.dart';
@@ -119,35 +120,41 @@ class _OrderTabViewState extends State<OrderTabView> {
                           if (appController.isProcessMode.isTrue &&
                               appController.orderTabController.value!.index ==
                                   0)
-                            Checkbox(
-                              value: appController.orderProcessList
-                                  .contains(item.id),
-                              onChanged: (value) {
-                                if (value!) {
-                                  if (appController.orderProcessList.isEmpty) {
-                                    appController.orderType.value =
-                                        item.orderTypeName!;
-                                  }
-                                  if (item.orderTypeName !=
-                                      appController.orderType.value) {
-                                    Get.showSnackbar(
-                                      GetSnackBar(
-                                        message:
-                                            "Không thể thực hiện đơn hàng có loại khác nhau",
-                                        backgroundColor:
-                                            context.theme.colorScheme.error,
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
+                            Padding(
+                              padding: const EdgeInsets.only(right: 15),
+                              child: MSHCheckbox(
+                                size: 30,
+                                duration: 400.ms,
+                                value: appController.orderProcessList
+                                    .contains(item.id),
+                                onChanged: (value) {
+                                  if (value) {
+                                    if (appController
+                                        .orderProcessList.isEmpty) {
+                                      appController.orderType.value =
+                                          item.orderTypeName!;
+                                    }
+                                    if (item.orderTypeName !=
+                                        appController.orderType.value) {
+                                      Get.showSnackbar(
+                                        GetSnackBar(
+                                          message:
+                                              "Không thể thực hiện đơn hàng có loại khác nhau",
+                                          backgroundColor:
+                                              context.theme.colorScheme.error,
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                    } else {
+                                      appController.orderProcessList
+                                          .add(item.id!);
+                                    }
                                   } else {
                                     appController.orderProcessList
-                                        .add(item.id!);
+                                        .remove(item.id);
                                   }
-                                } else {
-                                  appController.orderProcessList
-                                      .remove(item.id);
-                                }
-                              },
+                                },
+                              ),
                             ),
                           Expanded(
                             child: Column(

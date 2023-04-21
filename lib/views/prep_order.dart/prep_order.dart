@@ -59,12 +59,6 @@ class _PrepOrderState extends State<PrepOrder> {
         ),
       );
 
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-
       List<OrderHistoryDetail?> tempOrderDetails = orderDetails;
 
       for (var i = 0; i < tempOrderDetails.length; i++) {
@@ -100,6 +94,11 @@ class _PrepOrderState extends State<PrepOrder> {
       legList.clear();
       for (var itm in osrmMapData['trips'][0]['legs']) {
         legList.add(Leg.fromJson(itm));
+      }
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
       }
     } on Exception catch (e) {
       Get.log(e.toString());

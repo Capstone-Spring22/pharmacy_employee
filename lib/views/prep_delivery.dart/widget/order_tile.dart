@@ -82,7 +82,7 @@ class OrderTileDelivery extends StatelessWidget {
               child: const Text("Dùng Google Map"),
             ),
             FilledButton(
-              onPressed: () => orderAction(i),
+              onPressed: () => orderAction(i, orders[i]!.totalPrice!),
               child: const Text("Xử lý"),
             ),
           ],

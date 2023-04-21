@@ -212,17 +212,23 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50.0));
   }
 
-  void orderAction(int i) {
+  void orderAction(int i, num totalPrice) {
     TextEditingController txt = TextEditingController();
+    TextEditingController moneyTxt = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final formMoney = GlobalKey<FormState>();
+    Rx<num> change = 0.0.obs;
+
+    RxBool receiveMoney = false.obs;
     showModalBottomSheet(
       context: context,
+      enableDrag: true,
       builder: (BuildContext context) {
         return Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 50,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
           child: Container(
-            height: Get.height * .45,
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(
@@ -232,50 +238,129 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
             ),
             child: Padding(
               padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: ListView(
+                shrinkWrap: true,
+                // mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SwipeButton.expand(
-                      enabled: true,
-                      thumb: const Icon(
-                        Icons.double_arrow_rounded,
-                        color: Colors.white,
-                      ),
-                      activeThumbColor: context.theme.primaryColor,
-                      activeTrackColor: Colors.grey[300],
-                      onSwipe: () {
-                        appController.updateOrderStatus(
-                          orderId: orders[i]!.id!,
-                          status: "8",
-                        );
-                        appController.orderProcessList
-                            .removeWhere((element) => element == orders[i]!.id);
-                        addressList.removeAt(i);
-                        locationList.removeAt(i);
-                        orders.removeAt(i);
-                        appController.triggerOrderLoad();
-                        setState(() {
-                          if (orders.isEmpty &&
-                              appController.orderProcessList.isEmpty) {
-                            isFinished = true;
-                          }
-                        });
-                        Get.back();
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Tổng tiền: ',
+                              style: context.textTheme.bodyLarge,
+                            ),
+                            const Spacer(),
+                            Text(
+                              totalPrice.convertCurrentcy(),
+                              style: context.textTheme.bodyLarge,
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              'Tiền thối:',
+                              style: context.textTheme.bodyLarge,
+                            ),
+                            const Spacer(),
+                            Obx(
+                              () => Text(
+                                change.value.convertCurrentcy(),
+                                style: context.textTheme.bodyLarge,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Form(
+                    key: formMoney,
+                    child: Input(
+                      inputController: moneyTxt,
+                      title: 'Nhận tiền',
+                      inputType: TextInputType.number,
+                      maxLines: 1,
+                      txtHeight: 80,
+                      isFormField: true,
+                      validator: (p0) => p0!.isEmpty
+                          ? 'Nhập tiền'
+                          : p0.isNumericOnly
+                              ? num.parse(p0) < totalPrice
+                                  ? 'Tiền nhận phải cao hơn hoặc bằng tổng tiền'
+                                  : null
+                              : 'Nhập số',
+                      onChanged: (v) {
+                        if (formMoney.currentState!.validate()) {
+                          change.value = num.parse(v) - totalPrice;
+                          if (change.value >= 0) {
+                            receiveMoney.value = true;
+                          } else {}
+                        } else {
+                          receiveMoney.value = false;
+                        }
                       },
-                      child: const Text("Hoàn thành đơn hàng"),
                     ),
                   ),
                   Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Obx(() => SwipeButton.expand(
+                          enabled: receiveMoney.value,
+                          thumb: const Icon(
+                            Icons.double_arrow_rounded,
+                            color: Colors.white,
+                          ),
+                          activeThumbColor: context.theme.primaryColor,
+                          activeTrackColor: Colors.grey[300],
+                          onSwipe: () {
+                            appController.updateOrderStatus(
+                              orderId: orders[i]!.id!,
+                              status: "8",
+                            );
+                            appController.orderProcessList.removeWhere(
+                                (element) => element == orders[i]!.id);
+                            addressList.removeAt(i);
+                            locationList.removeAt(i);
+                            orders.removeAt(i);
+                            appController.triggerOrderLoad();
+                            setState(() {
+                              if (orders.isEmpty &&
+                                  appController.orderProcessList.isEmpty) {
+                                isFinished = true;
+                              }
+                            });
+                            Get.back();
+                          },
+                          child: const Text("Hoàn thành đơn hàng"),
+                        )),
+                  ),
+                  Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: Input(
-                      expands: true,
-                      maxLines: null,
-                      txtHeight: Get.height * .15,
-                      inputController: txt,
-                      inputType: TextInputType.multiline,
-                      title: "Lý do",
+                    child: Form(
+                      key: formKey,
+                      child: Input(
+                        expands: true,
+                        maxLines: null,
+                        txtHeight: Get.height * .15,
+                        inputController: txt,
+                        inputType: TextInputType.multiline,
+                        title: "Lý do",
+                        isFormField: true,
+                        validator: (p0) => p0!.isEmpty
+                            ? "Vui lòng nhập lý do"
+                            : p0.length < 10
+                                ? 'Tối thiểu 10 ký tự'
+                                : p0.isNumericOnly
+                                    ? 'Lý do không được chứa mỗi số'
+                                    : null,
+                        onChanged: (p0) {
+                          formKey.currentState!.validate();
+                        },
+                      ),
                     ),
                   ),
                   Padding(
@@ -331,7 +416,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                       ),
                       activeThumbColor: context.theme.colorScheme.error,
                       activeTrackColor: Colors.grey.shade300,
-                      onSwipe: () {
+                      onSwipe: () async {
                         if (txt.text.isEmpty) {
                           showSnack(
                             "Thông báo",
@@ -340,11 +425,9 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                           );
                           return;
                         } else {
-                          appController.updateOrderStatus(
-                            orderId: orders[i]!.id!,
-                            status: "11",
-                            desc: txt.text,
-                          );
+                          Get.dialog(LoadingWidget());
+                          await AppService()
+                              .cancelOrder(orders[i]!.id!, txt.text);
                           appController.orderProcessList.removeWhere(
                             (element) => element == orders[i]!.id,
                           );
@@ -359,6 +442,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                             }
                           });
                           Get.back();
+                          Get.back();
                         }
                       },
                       child: const Text("Hủy đơn hàng"),
@@ -370,7 +454,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
           ),
         );
       },
-      isScrollControlled: true,
+      // isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20.0),
@@ -529,36 +613,37 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                                       key: UniqueKey(),
                                       padding: const EdgeInsets.all(15),
                                       child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.grey
-                                                    .withOpacity(0.5),
-                                                spreadRadius: 1,
-                                                blurRadius: 7,
-                                                offset: const Offset(0, 3),
-                                              ),
-                                            ],
-                                          ),
-                                          child: OrderTileDelivery(
-                                            address: addressList[i],
-                                            distance: legList[i]
-                                                .distance!
-                                                .toKilometers(),
-                                            i: i,
-                                            orders: orders,
-                                            orderAction: orderAction,
-                                            orderId: orders[i]!.id!,
-                                            phone: orders[i]!
-                                                .orderContactInfo!
-                                                .phoneNumber!,
-                                            total: orders[i]!
-                                                .totalPrice!
-                                                .convertCurrentcy(),
-                                          )),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.grey.withOpacity(0.5),
+                                              spreadRadius: 1,
+                                              blurRadius: 7,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: OrderTileDelivery(
+                                          address: addressList[i],
+                                          distance: legList[i]
+                                              .distance!
+                                              .toKilometers(),
+                                          i: i,
+                                          orders: orders,
+                                          orderAction: orderAction,
+                                          orderId: orders[i]!.id!,
+                                          phone: orders[i]!
+                                              .orderContactInfo!
+                                              .phoneNumber!,
+                                          total: orders[i]!
+                                              .totalPrice!
+                                              .convertCurrentcy(),
+                                        ),
+                                      ),
                                     )
                                 ]),
                     ],

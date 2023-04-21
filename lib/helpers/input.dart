@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 class Input extends StatelessWidget {
@@ -18,6 +19,7 @@ class Input extends StatelessWidget {
   final double txtHeight;
   final bool isFormField;
   final String? Function(String?)? validator;
+  final List<TextInputFormatter> inputFormatters;
   const Input({
     Key? key,
     required this.inputController,
@@ -28,6 +30,7 @@ class Input extends StatelessWidget {
     this.enabled = true,
     this.hint,
     this.inputAction,
+    this.inputFormatters = const [],
     this.centerText = false,
     this.expands = false,
     this.onSubmit,
@@ -106,6 +109,7 @@ class Input extends StatelessWidget {
                     focusNode: focus,
                     enabled: enabled,
                     expands: expands,
+                    inputFormatters: inputFormatters,
                     textAlign: centerText ? TextAlign.center : TextAlign.left,
                     controller: inputController,
                     onChanged: onChanged,
