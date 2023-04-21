@@ -117,7 +117,6 @@ class AppService {
   Future<OrderHistoryDetail?> fetchOrderDetail(String id) async {
     try {
       var res = await dio.get('$api/Order/$id', options: appController.options);
-      Get.log(res.data.toString());
 
       return OrderHistoryDetail.fromJson(res.data);
     } on DioError catch (e) {
@@ -220,41 +219,6 @@ class AppService {
     }
   }
 
-  // Future<Map<String, dynamic>> getDistance(
-  //     Position currentPosition, List<Location> listDestinationLocation) async {
-  //   const apiKey =
-  //       '5b3ce3597851110001cf6248e2b15d5d8ed740e7a67b546cb69bc43d'; // Replace with your actual API key
-  //   const apiUrl = 'https://api.openrouteservice.org/v2/directions/driving-car';
-
-  //   final data = {
-  //     'coordinates': [
-  //       [currentPosition.longitude, currentPosition.latitude],
-  //       ...listDestinationLocation.map((e) => [e.longitude, e.latitude]),
-  //       [106.7585922, 10.8106114]
-  //     ],
-  //   };
-
-  //   try {
-  //     final res = await dio.post(
-  //       apiUrl,
-  //       options: Options(headers: {
-  //         'Authorization': apiKey,
-  //       }),
-  //       data: data,
-  //     );
-
-  //     if (res.statusCode == 200) {
-  //       final data = res.data;
-  //       return data;
-  //     } else {
-  //       throw Exception('Failed to get distance');
-  //     }
-  //   } on DioError catch (e) {
-  //     Get.log(e.response.toString());
-  //   }
-  //   return {};
-  // }
-
   static List<PolylinePoint> decodePolyline(String encoded) {
     final List<PolylinePoint> points = <PolylinePoint>[];
     int index = 0, len = encoded.length;
@@ -342,5 +306,25 @@ class AppService {
       Get.log(e.response.toString());
     }
     return {};
+  }
+
+  Future cancelOrder(String orderId, String reason) async {
+    try {
+      var ip = await fetchIpAddress();
+      var res = await dio.put(
+        '${api}Order/CancelOrder',
+        options: appController.options,
+        data: {
+          "orderId": orderId,
+          "reason": reason,
+          "ipAddress": ip,
+        },
+      );
+
+      Get.log('Cancel order: ${res.data}');
+      return res.statusCode;
+    } on DioError catch (e) {
+      Get.log('Cancel order Error: ${e.response!.toString()}');
+    }
   }
 }

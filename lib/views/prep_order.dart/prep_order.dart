@@ -4,9 +4,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:get/get_rx/src/rx_workers/utils/debouncer.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/constant/static.dart';
 import 'package:pharmacy_employee/controller/app_controller.dart';
+import 'package:pharmacy_employee/helpers/input.dart';
 import 'package:pharmacy_employee/helpers/loading.dart';
 import 'package:pharmacy_employee/main.dart';
 import 'package:pharmacy_employee/models/map/leg.dart';
@@ -57,11 +59,13 @@ class _PrepOrderState extends State<PrepOrder> {
         ),
       );
 
-      List<OrderHistoryDetail?> tempOrderDetails = await Future.wait(
-        orderProcessList.map(
-          (e) => AppService().fetchOrderDetail(e),
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+
+      List<OrderHistoryDetail?> tempOrderDetails = orderDetails;
 
       for (var i = 0; i < tempOrderDetails.length; i++) {
         totalProduct += tempOrderDetails[i]!.orderProducts!.length;
@@ -97,11 +101,6 @@ class _PrepOrderState extends State<PrepOrder> {
       for (var itm in osrmMapData['trips'][0]['legs']) {
         legList.add(Leg.fromJson(itm));
       }
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
     } on Exception catch (e) {
       Get.log(e.toString());
     }
@@ -112,6 +111,96 @@ class _PrepOrderState extends State<PrepOrder> {
       finished.add(index);
       isCompletePrep = finished.length == totalProduct;
     });
+  }
+
+  _dialogCancelOrder(String id) {
+    final txt = TextEditingController();
+    final key = GlobalKey<FormState>();
+    final debouncer = Debouncer(delay: 100.ms);
+    Get.defaultDialog(
+        backgroundColor: Colors.white,
+        radius: 20,
+        barrierDismissible: true,
+        title: 'Bạn có chắc chắn muốn hủy đơn hàng này không?',
+        actions: [
+          // SizedBox(
+          //   width: Get.width * .3,
+          //   child: const SwipeButton.expand(child: Text('Hủy Đơn Hàng')),
+          // )
+          FilledButton(
+            onPressed: () => Get.back(),
+            child: const Text('Không'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (key.currentState!.validate()) {
+                Get.dialog(LoadingWidget());
+                var res = await AppService().cancelOrder(id, txt.text);
+                if (res == 200) {
+                  setState(() {
+                    appController.orderProcessList
+                        .removeWhere((element) => element == id);
+                    final order = orderDetails
+                        .singleWhere((element) => element!.id == id);
+                    for (var element in order!.orderProducts!) {
+                      Get.log('id to remove: ${element.id}');
+                      finished.removeWhere((e) {
+                        Get.log('finished: $e');
+                        return e == element.id;
+                      });
+                    }
+                    orderDetails.remove(order);
+                    totalProduct = 0;
+                    for (var i = 0; i < orderDetails.length; i++) {
+                      totalProduct += orderDetails[i]!.orderProducts!.length;
+                    }
+
+                    isCompletePrep = finished.length == totalProduct;
+                  });
+                  appController.triggerOrderLoad();
+                  Get.back();
+                  Get.back();
+                } else {
+                  Get.back();
+                  Get.back();
+                  Get.snackbar('Lỗi', 'Hủy đơn hàng thất bại');
+                }
+              }
+            },
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Colors.red),
+            ),
+            child: const Text('Hủy Đơn Hàng'),
+          ),
+        ],
+        content: Form(
+          key: key,
+          child: Column(
+            children: [
+              Input(
+                title: 'Lý do hủy đơn (tối thiểu 10 ký tự)',
+                inputController: txt,
+                autofocus: true,
+                txtHeight: Get.height * .1,
+                expands: true,
+                inputType: TextInputType.multiline,
+                isFormField: true,
+                validator: (p0) {
+                  if (p0!.length < 10) {
+                    return 'Lý do hủy đơn phải có ít nhất 10 ký tự';
+                  }
+                  return null;
+                },
+                onChanged: (p0) {
+                  debouncer.cancel();
+                  debouncer.call(() {
+                    key.currentState!.validate();
+                  });
+                },
+              ),
+            ],
+          ),
+        ));
   }
 
   @override
@@ -176,98 +265,144 @@ class _PrepOrderState extends State<PrepOrder> {
           : SingleChildScrollView(
               child: Column(
                 children: [
-                  ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: appController.orderProcessList.length,
-                    itemBuilder: (context, index) {
-                      final contactInfo =
-                          orderDetails[index]!.orderContactInfo!;
-                      final products = orderDetails[index]!.orderProducts!;
-                      final grouped = orderDetails[index]!
-                          .orderProducts!
-                          .groupProductByName();
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.5),
-                                spreadRadius: 1,
-                                blurRadius: 7,
-                                offset: const Offset(0, 3),
+                  appController.orderProcessList.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Text(
+                                'Không có đơn hàng nào',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Text(
+                                'Hãy chọn đơn hàng để chuẩn bị',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
-                          child: ExpansionTile(
-                            initiallyExpanded: true,
-                            title: AutoSizeText(
-                              appController.orderProcessList[index],
-                              maxLines: 1,
-                            ),
-                            expandedCrossAxisAlignment:
-                                CrossAxisAlignment.start,
-                            children: [
-                              DetailContent(
-                                title: "Tên khách hàng",
-                                content: AutoSizeText(
-                                  "${contactInfo.fullname}",
-                                ),
-                                haveDivider: false,
+                        )
+                      : ListView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: appController.orderProcessList.length,
+                          itemBuilder: (context, index) {
+                            final contactInfo =
+                                orderDetails[index]!.orderContactInfo!;
+                            final products =
+                                orderDetails[index]!.orderProducts!;
+                            final grouped = orderDetails[index]!
+                                .orderProducts!
+                                .groupProductByName();
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
                               ),
-                              DetailContent(
-                                title: "Số điện thoại",
-                                content: AutoSizeText(
-                                  "${contactInfo.phoneNumber}",
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.5),
+                                      spreadRadius: 1,
+                                      blurRadius: 7,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
-                                haveDivider: false,
-                              ),
-                              DetailContent(
-                                title: "Địa chỉ",
-                                content: AutoSizeText(
-                                  "${orderDetails[index]!.orderDelivery!.fullyAddress}",
+                                child: ExpansionTile(
+                                  initiallyExpanded: true,
+                                  title: AutoSizeText(
+                                    appController.orderProcessList[index],
+                                    maxLines: 1,
+                                  ),
+                                  expandedCrossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    DetailContent(
+                                      title: "Tên khách hàng",
+                                      content: AutoSizeText(
+                                        "${contactInfo.fullname}",
+                                      ),
+                                      haveDivider: false,
+                                    ),
+                                    DetailContent(
+                                      title: "Số điện thoại",
+                                      content: AutoSizeText(
+                                        "${contactInfo.phoneNumber}",
+                                      ),
+                                      haveDivider: false,
+                                    ),
+                                    DetailContent(
+                                      title: "Địa chỉ",
+                                      content: AutoSizeText(
+                                        "${orderDetails[index]!.orderDelivery!.fullyAddress}",
+                                      ),
+                                      haveDivider: false,
+                                    ),
+                                    // DetailContent(
+                                    //   title: "Khoảng cách",
+                                    //   content: AutoSizeText(
+                                    //     legList[index].distance!.toKilometers(),
+                                    //   ),
+                                    //   haveDivider: false,
+                                    // ),
+                                    DetailContent(
+                                      title: "Tổng tiền",
+                                      content: AutoSizeText(
+                                        orderDetails[index]!
+                                            .totalPrice!
+                                            .convertCurrentcy(),
+                                      ),
+                                    ),
+                                    productList(grouped, products),
+
+                                    Align(
+                                      alignment: Alignment.center,
+                                      child: Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 10),
+                                        child: FilledButton(
+                                          style: ButtonStyle(
+                                            backgroundColor:
+                                                MaterialStateProperty.all(
+                                                    Colors.red),
+                                          ),
+                                          onPressed: () => _dialogCancelOrder(
+                                            orderDetails[index]!.id!,
+                                          ),
+                                          child: const Text('Hủy Đơn Hàng'),
+                                        ),
+                                      ),
+                                    )
+                                  ],
                                 ),
-                                haveDivider: false,
                               ),
-                              DetailContent(
-                                title: "Khoảng cách",
-                                content: AutoSizeText(
-                                  legList[index].distance!.toKilometers(),
-                                ),
-                                haveDivider: false,
-                              ),
-                              DetailContent(
-                                title: "Tổng tiền",
-                                content: AutoSizeText(
-                                  orderDetails[index]!
-                                      .totalPrice!
-                                      .convertCurrentcy(),
-                                ),
-                              ),
-                              productList(grouped, products),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                  DeliveryButton(
-                    isCompletePrep: isCompletePrep,
-                    orderDetails: orderDetails,
-                    addressList: addressList,
-                    osrmMapData: osrmMapData,
-                    legList: legList,
-                    locationList: locationList,
-                    currentPosition: currentPosition,
-                    totalProduct: totalProduct,
-                    finished: finished,
-                  ),
+                  if (appController.orderProcessList.isNotEmpty)
+                    DeliveryButton(
+                      isCompletePrep: isCompletePrep,
+                      orderDetails: orderDetails,
+                      addressList: addressList,
+                      osrmMapData: osrmMapData,
+                      legList: legList,
+                      locationList: locationList,
+                      currentPosition: currentPosition,
+                      totalProduct: totalProduct,
+                      finished: finished,
+                    ),
                 ],
               ),
             ),

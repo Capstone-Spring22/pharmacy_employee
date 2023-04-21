@@ -324,12 +324,29 @@ class _OrderDetailState extends State<OrderDetail> {
                                         ),
                                         const Divider(),
                                         ...item.map(
-                                          (e) => Text(
-                                            style: TextStyle(
-                                              fontSize: font.value,
-                                            ),
-                                            "Số Lượng: ${e.quantity!} ${e.unitName}",
-                                          ),
+                                          (e) {
+                                            return Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  style: TextStyle(
+                                                    fontSize: font.value,
+                                                  ),
+                                                  "Số Lượng: ${e.quantity!} ${e.unitName}",
+                                                ),
+                                                e.productNoteFromPharmacist ==
+                                                        null
+                                                    ? Container()
+                                                    : Text(
+                                                        style: TextStyle(
+                                                          fontSize: font.value,
+                                                        ),
+                                                        "Ghi Chú: ${e.productNoteFromPharmacist!}",
+                                                      ),
+                                              ],
+                                            );
+                                          },
                                         ),
                                       ],
                                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:get/get.dart';
+import 'package:get/get_rx/src/rx_workers/utils/debouncer.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/helpers/input.dart';
 import 'package:pharmacy_employee/helpers/loading.dart';
@@ -52,6 +53,8 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
       builder: (context) {
         FocusNode focusNode = FocusNode();
         final theme = context.textTheme;
+        final formKey = GlobalKey<FormState>();
+        final deboucer = Debouncer(delay: 500.milliseconds);
         return SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.only(
@@ -69,16 +72,44 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                   isAccept ? "Nhận đơn hàng" : "Từ chối đơn hàng",
                   style: theme.headlineSmall,
                 ),
-                Input(
-                  inputController: inputController,
-                  focus: focusNode,
-                  expands: true,
-                  maxLines: null,
-                  title: isAccept ? "Thông tin" : "Lý do từ chối",
-                  autofocus: true,
-                  txtHeight: 100,
-                  inputType: TextInputType.multiline,
-                ),
+                isAccept
+                    ? Input(
+                        inputController: inputController,
+                        focus: focusNode,
+                        expands: true,
+                        maxLines: null,
+                        title: "Ghi chú của nhân viên",
+                        autofocus: true,
+                        txtHeight: 100,
+                        inputType: TextInputType.multiline,
+                      )
+                    : Form(
+                        key: formKey,
+                        child: Input(
+                          inputController: inputController,
+                          focus: focusNode,
+                          expands: true,
+                          isFormField: true,
+                          maxLines: null,
+                          title: "Lý do từ chối đơn hàng (tối thiểu 10 kí tự)",
+                          validator: (p0) => p0!.isEmpty
+                              ? "Không được để trống"
+                              : p0.isNumericOnly
+                                  ? 'Lý do không hợp lệ'
+                                  : p0.length < 10
+                                      ? "Lý do từ chối quá ngắn"
+                                      : null,
+                          autofocus: true,
+                          txtHeight: 100,
+                          inputType: TextInputType.multiline,
+                          onChanged: (v) {
+                            deboucer.cancel();
+                            deboucer.call(() {
+                              formKey.currentState!.validate();
+                            });
+                          },
+                        ),
+                      ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                   child: SwipeButton.expand(
