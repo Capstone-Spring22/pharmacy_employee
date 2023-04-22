@@ -112,7 +112,7 @@ class _PrepOrderState extends State<PrepOrder> {
     });
   }
 
-  _dialogCancelOrder(String id) {
+  dialogCancelOrder(String id) {
     final txt = TextEditingController();
     final key = GlobalKey<FormState>();
     final debouncer = Debouncer(delay: 100.ms);
@@ -377,7 +377,7 @@ class _PrepOrderState extends State<PrepOrder> {
                                                 MaterialStateProperty.all(
                                                     Colors.red),
                                           ),
-                                          onPressed: () => _dialogCancelOrder(
+                                          onPressed: () => dialogCancelOrder(
                                             orderDetails[index]!.id!,
                                           ),
                                           child: const Text('Hủy Đơn Hàng'),

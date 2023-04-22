@@ -154,9 +154,9 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
       legList.add(Leg.fromJson(itm));
     }
 
-    for (var e in legList) {
-      Get.log(e.steps!.length.toString());
+    _polylines.clear();
 
+    for (var e in legList) {
       List<PolylinePoint> poly = [];
       for (var ele in e.steps!) {
         poly.addAll(AppService.decodePolyline(ele.geometry!));
@@ -331,6 +331,10 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                               if (orders.isEmpty &&
                                   appController.orderProcessList.isEmpty) {
                                 isFinished = true;
+                              } else {
+                                selectedValue == 0
+                                    ? getRouteFastest()
+                                    : getRouteBySort();
                               }
                             });
                             Get.back();
@@ -398,8 +402,13 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                             if (orders.isEmpty &&
                                 appController.orderProcessList.isEmpty) {
                               isFinished = true;
+                            } else {
+                              selectedValue == 0
+                                  ? getRouteFastest()
+                                  : getRouteBySort();
                             }
                           });
+
                           Get.back();
                         }
                       },
@@ -439,6 +448,10 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                             if (orders.isEmpty &&
                                 appController.orderProcessList.isEmpty) {
                               isFinished = true;
+                            } else {
+                              selectedValue == 0
+                                  ? getRouteFastest()
+                                  : getRouteBySort();
                             }
                           });
                           Get.back();
@@ -469,6 +482,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     return Scaffold(
       backgroundColor: context.theme.colorScheme.background,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Kế hoạch giao hàng'),
         actions: const [],
       ),
@@ -629,9 +643,21 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                                         ),
                                         child: OrderTileDelivery(
                                           address: addressList[i],
-                                          distance: legList[i]
-                                              .distance!
-                                              .toKilometers(),
+                                          distance: legList
+                                                      .map((e) => e.distance)
+                                                      .take(i)
+                                                      .toList()
+                                                      .length >
+                                                  1
+                                              ? legList
+                                                  .map((e) => e.distance)
+                                                  .take(i)
+                                                  .reduce((value, element) =>
+                                                      value! + element!)!
+                                                  .toKilometers()
+                                              : legList[i]
+                                                  .distance!
+                                                  .toKilometers(),
                                           i: i,
                                           orders: orders,
                                           orderAction: orderAction,

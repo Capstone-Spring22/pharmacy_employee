@@ -3,7 +3,9 @@ import 'package:exprollable_page_view/exprollable_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
 import 'package:get/get.dart';
+import 'package:get/get_rx/src/rx_workers/utils/debouncer.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
+import 'package:pharmacy_employee/helpers/input.dart';
 import 'package:pharmacy_employee/helpers/loading.dart';
 import 'package:pharmacy_employee/main.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
@@ -84,14 +86,19 @@ class OrderDetail extends StatefulWidget {
 
 class _OrderDetailState extends State<OrderDetail> {
   String id = "";
-  late final OrderHistoryDetail order;
+  late OrderHistoryDetail order;
   bool isFetch = true;
   List<Map<String, dynamic>> mapStatus = [];
 
-  _fetchOrderDetail() async {
+  Future _fetchOrderDetail() async {
+    if (isFetch == false) {
+      setState(() {
+        isFetch = true;
+      });
+    }
     try {
       order = (await AppService().fetchOrderDetail(id))!;
-
+      mapStatus.clear();
       await AppService().fetchOrderStatus(order.orderTypeId!).then((value) {
         for (final i in value) {
           mapStatus
@@ -120,6 +127,74 @@ class _OrderDetailState extends State<OrderDetail> {
     }
 
     _fetchOrderDetail();
+  }
+
+  dialogCancelOrder(String id) {
+    final txt = TextEditingController();
+    final key = GlobalKey<FormState>();
+    final debouncer = Debouncer(delay: 100.milliseconds);
+    Get.defaultDialog(
+        backgroundColor: Colors.white,
+        radius: 20,
+        barrierDismissible: true,
+        title: 'Bạn có chắc chắn muốn hủy đơn hàng này không?',
+        actions: [
+          FilledButton(
+            onPressed: () => Get.back(),
+            child: const Text('Không'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (key.currentState!.validate()) {
+                Get.dialog(LoadingWidget());
+                var res = await AppService().cancelOrder(id, txt.text);
+                if (res == 200) {
+                  setState(() {});
+                  appController.triggerOrderLoad();
+                  await _fetchOrderDetail();
+                  Get.back();
+                  Get.back();
+                } else {
+                  Get.back();
+                  Get.back();
+                  Get.snackbar('Lỗi', 'Hủy đơn hàng thất bại');
+                }
+              }
+            },
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Colors.red),
+            ),
+            child: const Text('Hủy Đơn Hàng'),
+          ),
+        ],
+        content: Form(
+          key: key,
+          child: Column(
+            children: [
+              Input(
+                title: 'Lý do hủy đơn (tối thiểu 10 ký tự)',
+                inputController: txt,
+                autofocus: true,
+                txtHeight: Get.height * .1,
+                expands: true,
+                inputType: TextInputType.multiline,
+                isFormField: true,
+                validator: (p0) {
+                  if (p0!.length < 10) {
+                    return 'Lý do hủy đơn phải có ít nhất 10 ký tự';
+                  }
+                  return null;
+                },
+                onChanged: (p0) {
+                  debouncer.cancel();
+                  debouncer.call(() {
+                    key.currentState!.validate();
+                  });
+                },
+              ),
+            ],
+          ),
+        ));
   }
 
   @override
@@ -431,6 +506,23 @@ class _OrderDetailState extends State<OrderDetail> {
                                     .contains(order.id!)
                                 ? "Đã có trong danh sách xử lý, loại bỏ?"
                                 : "Thêm vào đơn xử lý"),
+                          ),
+                        ),
+                      if (order.orderStatus == '9')
+                        Align(
+                          alignment: Alignment.center,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: FilledButton(
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStateProperty.all(Colors.red),
+                              ),
+                              onPressed: () => dialogCancelOrder(
+                                order.id!,
+                              ),
+                              child: const Text('Hủy Đơn Hàng'),
+                            ),
                           ),
                         )
                     ],
