@@ -89,6 +89,8 @@ class _OrderDetailState extends State<OrderDetail> {
   late OrderHistoryDetail order;
   bool isFetch = true;
   List<Map<String, dynamic>> mapStatus = [];
+  // bool openStatusTile = false;
+  // List<OrderStatusHistory> history = [];
 
   Future _fetchOrderDetail() async {
     if (isFetch == false) {
@@ -98,12 +100,14 @@ class _OrderDetailState extends State<OrderDetail> {
     }
     try {
       order = (await AppService().fetchOrderDetail(id))!;
+      // history = await AppService().fetchOrderStatusHistory(id);
       mapStatus.clear();
       await AppService().fetchOrderStatus(order.orderTypeId!).then((value) {
         for (final i in value) {
           mapStatus
               .add({"id": i['orderStatusId'], "name": i['orderStatusName']});
         }
+
         setState(() {
           isFetch = false;
         });
@@ -240,13 +244,16 @@ class _OrderDetailState extends State<OrderDetail> {
                             order.orderContactInfo!.email ?? "Không có email",
                           ),
                         ),
-                      DetailContent(
-                        title: "Số Điện Thoại",
-                        content: Text(
-                          style: TextStyle(fontSize: font.value),
-                          contactInfo.phoneNumber ?? "Không có số điện thoại",
-                        ),
-                      ),
+                      contactInfo.phoneNumber!.isEmpty
+                          ? Container()
+                          : DetailContent(
+                              title: "Số Điện Thoại",
+                              content: Text(
+                                style: TextStyle(fontSize: font.value),
+                                contactInfo.phoneNumber ??
+                                    "Không có số điện thoại",
+                              ),
+                            ),
                       if (order.pharmacistId !=
                           appController.pharmacist.value.id)
                         DetailContent(
@@ -285,6 +292,64 @@ class _OrderDetailState extends State<OrderDetail> {
                           ),
                         ),
                       ),
+                      // ExpansionTile(
+                      //   tilePadding: EdgeInsets.zero,
+                      //   title: DetailContent(
+                      //     title: "Trạng Thái",
+                      //     content: Text(
+                      //       mapStatus.singleWhere((element) =>
+                      //           element['id'] == order.orderStatus!)['name'],
+                      //       style: TextStyle(
+                      //         fontSize: font.value,
+                      //         color: theme.primaryColor,
+                      //       ),
+                      //     ),
+                      //   ),
+                      //   children: history
+                      //       .map((e) => Padding(
+                      //             padding: const EdgeInsets.symmetric(
+                      //                 vertical: 5, horizontal: 10),
+                      //             child: Container(
+                      //               padding: const EdgeInsets.symmetric(
+                      //                   vertical: 8, horizontal: 8),
+                      //               decoration: BoxDecoration(
+                      //                 boxShadow: [
+                      //                   BoxShadow(
+                      //                     color: Colors.grey.withOpacity(0.5),
+                      //                     spreadRadius: 1,
+                      //                     blurRadius: 1,
+                      //                     offset: const Offset(0,
+                      //                         1), // changes position of shadow
+                      //                   ),
+                      //                 ],
+                      //                 borderRadius: BorderRadius.circular(10),
+                      //                 color: Colors.white,
+                      //               ),
+                      //               child: ListView(
+                      //                 shrinkWrap: true,
+                      //                 children: [
+                      //                   Row(
+                      //                     children: [
+                      //                       const Text('Trạng thái'),
+                      //                       const Spacer(),
+                      //                       Text(e.statusName!)
+                      //                     ],
+                      //                   ),
+                      //                   Column(
+                      //                     children: [
+                      //                       const Text('Mô tả'),
+                      //                       Text(
+                      //                         e.statusDescriptions![0]
+                      //                             .description!,
+                      //                       ),
+                      //                     ],
+                      //                   ),
+                      //                 ],
+                      //               ),
+                      //             ),
+                      //           ))
+                      //       .toList(),
+                      // ),
                       DetailContent(
                         title: "Tổng Tiền",
                         content: Text(

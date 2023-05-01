@@ -4,8 +4,11 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:georouter/georouter.dart';
 import 'package:get/get.dart' hide Response;
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
+import 'package:pharmacy_employee/models/detail_user.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
+import 'package:pharmacy_employee/models/order_status_history.dart';
 import 'package:pharmacy_employee/models/pharmacist.dart';
 import 'package:pharmacy_employee/models/site.dart';
 
@@ -47,6 +50,29 @@ class AppService {
     }
   }
 
+  Future fetchOrderProcess(int page) async {
+    try {
+      final res = await dio.get(
+        '${api}Order',
+        queryParameters: {
+          'pageIndex': page,
+          'pageItems': 10,
+          'isCompleted': false,
+          'ShowOnlyPharmacist': true,
+        },
+        options: appController.options,
+      );
+
+      return res.statusCode == 200 ? res.data : null;
+    } on DioError catch (e) {
+      Get.log(e.message.toString());
+
+      if (e.response != null) {
+        Get.log(e.response!.data.toString());
+      }
+    }
+  }
+
   Future fetchOrder(
     int page,
     bool isAccept,
@@ -55,7 +81,7 @@ class AppService {
   }) async {
     try {
       var res = await dio.get(
-        '$api/Order',
+        '${api}Order',
         queryParameters: {
           'NotAcceptable': isAccept,
           'pageIndex': page,
@@ -77,7 +103,7 @@ class AppService {
 
   Future<List<Site>> fetchAllSite() async {
     var res = await dio
-        .get('$api/Site', options: appController.options, queryParameters: {
+        .get('${api}Site', options: appController.options, queryParameters: {
       'pageIndex': 1,
       'pageItems': 10,
     });
@@ -87,9 +113,20 @@ class AppService {
         : [];
   }
 
+  Future<List<OrderStatusHistory>> fetchOrderStatusHistory(String id) async {
+    var res = await dio.get(
+      '${api}Order/OrderExecutionHistory/$id',
+      options: appController.options,
+    );
+
+    return res.statusCode == 200
+        ? List.from(res.data.map((e) => OrderStatusHistory.fromJson(e)))
+        : [];
+  }
+
   Future lookupProduct(String name, int page) async {
     try {
-      var res = await dio.get('$api/Product', queryParameters: {
+      var res = await dio.get('${api}Product', queryParameters: {
         'productName': name,
         'pageIndex': page,
         'pageItems': 10,
@@ -104,7 +141,7 @@ class AppService {
   Future fetchProductDetail(String id) async {
     try {
       var res = await dio.get(
-        '$api/Product/View/$id',
+        '${api}Product/View/$id',
         options: appController.options,
       );
 
@@ -116,7 +153,8 @@ class AppService {
 
   Future<OrderHistoryDetail?> fetchOrderDetail(String id) async {
     try {
-      var res = await dio.get('$api/Order/$id', options: appController.options);
+      var res =
+          await dio.get('${api}Order/$id', options: appController.options);
 
       return OrderHistoryDetail.fromJson(res.data);
     } on DioError catch (e) {
@@ -129,7 +167,7 @@ class AppService {
   Future fetchOrderStatus(num id) async {
     try {
       var res = await dio.get(
-        '$api/OrderStatus',
+        '${api}OrderStatus',
         queryParameters: {
           'OrderTypeId': id,
         },
@@ -326,5 +364,20 @@ class AppService {
     } on DioError catch (e) {
       Get.log('Cancel order Error: ${e.response!.toString()}');
     }
+  }
+
+  Future<DetailPharmacist?> fetchDetailPharmacist(String token) async {
+    final id = JwtDecoder.decode(token)[
+        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+    try {
+      var res = await dio.get(
+        '${api}User/$id',
+        options: appController.options,
+      );
+      return DetailPharmacist.fromJson(res.data);
+    } on DioError catch (e) {
+      Get.log(e.response.toString());
+    }
+    return null;
   }
 }

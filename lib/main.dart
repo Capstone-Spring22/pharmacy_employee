@@ -20,6 +20,7 @@ import 'package:pharmacy_employee/views/lookup/lookup.dart';
 import 'package:pharmacy_employee/views/map/map.dart';
 import 'package:pharmacy_employee/views/order/order.dart';
 import 'package:pharmacy_employee/views/order_detail/order_detail.dart';
+import 'package:pharmacy_employee/views/order_process/order_process.dart';
 import 'package:pharmacy_employee/views/overlay/btn_tag.dart';
 import 'package:pharmacy_employee/views/overlay/overlay.dart';
 import 'package:pharmacy_employee/views/prep_order.dart/prep_order.dart';
@@ -157,6 +158,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/prep_order', page: () => const PrepOrder()),
         GetPage(name: '/order_detail', page: () => const OrderDetail()),
         GetPage(name: '/order_confirm', page: () => const ConfirmOrderScreen()),
+        GetPage(name: '/order_process', page: () => const OrderProcessScreen()),
         GetPage(
           name: '/order_view',
           page: () => const OrderScreen(),

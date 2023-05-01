@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 
 class DetailContent extends StatelessWidget {
-  const DetailContent(
-      {super.key,
-      required this.title,
-      required this.content,
-      this.haveDivider = true,
-      this.zeroPadding = false});
+  const DetailContent({
+    super.key,
+    required this.title,
+    required this.content,
+    this.haveDivider = true,
+    this.zeroPadding = false,
+  });
 
   final String title;
   final Widget content;

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:pharmacy_employee/views/order/order_tabview.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
@@ -129,54 +128,10 @@ class _OrderScreenState extends State<OrderScreen>
                 ],
               ),
               actions: [
-                if (appController.isProcessMode.isTrue)
-                  TextButton(
-                    onPressed: appController.orderProcessList.isEmpty
-                        ? null
-                        : () async {
-                            if (appController.orderType.value ==
-                                "Giao hàng tận nơi") {
-                              if (await Permission.location.isGranted) {
-                                Get.toNamed('/prep_order');
-                              } else {
-                                await Permission.location.request().then(
-                                      (value) => Get.toNamed('/prep_order'),
-                                    );
-                              }
-                            } else {
-                              Get.toNamed('/prep_pickup');
-                            }
-                          },
-                    child: Text(
-                      "Thực hiện ${appController.orderProcessList.length} đơn",
-                    ),
-                  ),
-                AnimatedSlide(
-                  duration: const Duration(milliseconds: 100),
-                  offset: offset,
-                  child: TextButton(
-                    onPressed: () {
-                      if (appController.isProcessMode.isTrue) {
-                        appController.isProcessMode.value = false;
-                      } else {
-                        appController.isProcessMode.toggle();
-                      }
-                    },
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: appController.isProcessMode.isTrue
-                          ? const Text(
-                              "Đóng",
-                              style: TextStyle(color: Colors.red),
-                            )
-                          : Text(
-                              "Chọn đơn thực hiện",
-                              style:
-                                  TextStyle(color: context.theme.primaryColor),
-                            ),
-                    ),
-                  ),
-                ),
+                TextButton(
+                  onPressed: () => Get.toNamed('/order_process'),
+                  child: const Text("Xử lý đơn"),
+                )
               ],
             ),
             body: TabBarView(

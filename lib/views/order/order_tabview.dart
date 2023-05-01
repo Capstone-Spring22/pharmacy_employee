@@ -108,11 +108,6 @@ class _OrderTabViewState extends State<OrderTabView> {
                     onTap: () {
                       showOrderDetailDialog(context, index, widget.type);
                     },
-                    onLongPress: () {
-                      if (appController.orderTabController.value!.index == 0) {
-                        appController.isProcessMode.toggle();
-                      }
-                    },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Row(
