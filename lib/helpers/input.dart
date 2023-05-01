@@ -20,10 +20,12 @@ class Input extends StatelessWidget {
   final bool isFormField;
   final String? Function(String?)? validator;
   final List<TextInputFormatter> inputFormatters;
+  final VoidCallback? clearBtn;
   const Input({
     Key? key,
     required this.inputController,
     this.title,
+    this.clearBtn,
     this.onChanged,
     this.focus,
     this.inputType,
@@ -48,9 +50,7 @@ class Input extends StatelessWidget {
 
     final deco = InputDecoration(
       suffixIcon: IconButton(
-        onPressed: () {
-          inputController.text = "";
-        },
+        onPressed: clearBtn ?? () => inputController.clear(),
         icon: const Icon(Icons.clear),
       ),
       label: title != null ? Text(title!) : null,

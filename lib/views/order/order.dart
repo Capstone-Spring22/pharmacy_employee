@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pharmacy_employee/views/order/order_tabview.dart';
-import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 
 import '../../constant/controller.dart';
 
@@ -102,21 +101,10 @@ class _OrderScreenState extends State<OrderScreen>
           var tabController = appController.orderTabController;
           return Scaffold(
             floatingActionButton: FloatingActionButton(
-              onPressed: () async {
-                var res = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SimpleBarcodeScannerPage(),
-                    ));
-                setState(() {
-                  if (res is String) {
-                    if (res != "-1") {
-                      Get.toNamed('/order_detail', arguments: res);
-                    }
-                  }
-                });
+              onPressed: () {
+                Get.toNamed('/order_lookup');
               },
-              child: const Icon(Icons.barcode_reader),
+              child: const Icon(Icons.search),
             ),
             appBar: AppBar(
               title: const Text("Đơn hàng"),

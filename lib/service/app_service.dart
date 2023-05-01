@@ -380,4 +380,24 @@ class AppService {
     }
     return null;
   }
+
+  Future<Map<String, dynamic>?> orderLookup(
+      String searchQuery, int page, bool isCompleted) async {
+    try {
+      var res = await dio.get(
+        '${api}Order',
+        options: appController.options,
+        queryParameters: {
+          'OrderIdOrPhoneNo': searchQuery,
+          'isCompleted': isCompleted,
+          'pageIndex': page,
+          'pageItems': 10,
+        },
+      );
+      return res.data;
+    } on DioError catch (e) {
+      Get.log(e.response.toString());
+    }
+    return null;
+  }
 }

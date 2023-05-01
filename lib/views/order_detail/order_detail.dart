@@ -292,64 +292,6 @@ class _OrderDetailState extends State<OrderDetail> {
                           ),
                         ),
                       ),
-                      // ExpansionTile(
-                      //   tilePadding: EdgeInsets.zero,
-                      //   title: DetailContent(
-                      //     title: "Trạng Thái",
-                      //     content: Text(
-                      //       mapStatus.singleWhere((element) =>
-                      //           element['id'] == order.orderStatus!)['name'],
-                      //       style: TextStyle(
-                      //         fontSize: font.value,
-                      //         color: theme.primaryColor,
-                      //       ),
-                      //     ),
-                      //   ),
-                      //   children: history
-                      //       .map((e) => Padding(
-                      //             padding: const EdgeInsets.symmetric(
-                      //                 vertical: 5, horizontal: 10),
-                      //             child: Container(
-                      //               padding: const EdgeInsets.symmetric(
-                      //                   vertical: 8, horizontal: 8),
-                      //               decoration: BoxDecoration(
-                      //                 boxShadow: [
-                      //                   BoxShadow(
-                      //                     color: Colors.grey.withOpacity(0.5),
-                      //                     spreadRadius: 1,
-                      //                     blurRadius: 1,
-                      //                     offset: const Offset(0,
-                      //                         1), // changes position of shadow
-                      //                   ),
-                      //                 ],
-                      //                 borderRadius: BorderRadius.circular(10),
-                      //                 color: Colors.white,
-                      //               ),
-                      //               child: ListView(
-                      //                 shrinkWrap: true,
-                      //                 children: [
-                      //                   Row(
-                      //                     children: [
-                      //                       const Text('Trạng thái'),
-                      //                       const Spacer(),
-                      //                       Text(e.statusName!)
-                      //                     ],
-                      //                   ),
-                      //                   Column(
-                      //                     children: [
-                      //                       const Text('Mô tả'),
-                      //                       Text(
-                      //                         e.statusDescriptions![0]
-                      //                             .description!,
-                      //                       ),
-                      //                     ],
-                      //                   ),
-                      //                 ],
-                      //               ),
-                      //             ),
-                      //           ))
-                      //       .toList(),
-                      // ),
                       DetailContent(
                         title: "Tổng Tiền",
                         content: Text(
@@ -518,40 +460,7 @@ class _OrderDetailState extends State<OrderDetail> {
                           ),
                         ),
                       if (order.orderStatus == "9")
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                          child: SwipeButton.expand(
-                            thumb: const Icon(
-                              Icons.double_arrow_rounded,
-                              color: Colors.white,
-                            ),
-                            activeThumbColor: context.theme.primaryColor,
-                            activeTrackColor: Colors.grey.shade300,
-                            onSwipe: () async {
-                              showDialog(
-                                context: context,
-                                builder: (context) => Center(
-                                  child: LoadingWidget(
-                                    size: 60,
-                                  ),
-                                ),
-                              );
-                              await appController
-                                  .updateOrderStatus(
-                                      orderId: order.id!, status: "4")
-                                  .then((value) async {
-                                await appController.triggerOrderLoad();
-
-                                Get.back();
-                                Get.back();
-                              });
-                            },
-                            child: Text(
-                              "Khách đã nhận hàng, hoàn thành đơn",
-                              style: context.textTheme.titleSmall,
-                            ),
-                          ),
-                        ),
+                        ConfirmExchangePrice(order: order),
                       if (appController.isProcessMode.isTrue &&
                           (order.orderStatus == '6' ||
                               order.orderStatus == '3' ||
@@ -595,6 +504,215 @@ class _OrderDetailState extends State<OrderDetail> {
                 }),
               ),
             ),
+    );
+  }
+}
+
+class ConfirmExchangePrice extends StatefulWidget {
+  const ConfirmExchangePrice({super.key, required this.order});
+
+  final OrderHistoryDetail order;
+  @override
+  State<ConfirmExchangePrice> createState() => _ConfirmExchangePriceState();
+}
+
+class _ConfirmExchangePriceState extends State<ConfirmExchangePrice> {
+  final TextEditingController txtPrice = TextEditingController();
+  double priceReceived = 0;
+  bool activeBtn = false;
+
+  double exChangePrice() {
+    activeBtn = priceReceived >= widget.order.totalPrice!;
+    return priceReceived - widget.order.totalPrice!;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final font = appController.fontSize;
+    final theme = context.theme;
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SizedBox(
+            width: Get.width,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                AutoSizeText(
+                  "Tổng tiền thu:",
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: font.value,
+                  ),
+                ),
+                AutoSizeText(
+                  widget.order.totalPrice!.convertCurrentcy(),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SizedBox(
+            width: Get.width,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                AutoSizeText(
+                  "Tiền cần thối:",
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: font.value,
+                  ),
+                ),
+                AutoSizeText(
+                  exChangePrice().convertCurrentcy(),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 50,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            itemExtent: Get.width * .28,
+            children: [
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    priceReceived += 500000;
+                    txtPrice.text = priceReceived.toInt().toString();
+                  });
+                },
+                child: const Chip(label: Text("500.000đ")),
+              ),
+              InkWell(
+                onTap: () => setState(() {
+                  setState(() {
+                    priceReceived += 200000;
+                    txtPrice.text = priceReceived.toInt().toString();
+                  });
+                }),
+                child: const Chip(label: Text("200.000đ")),
+              ),
+              InkWell(
+                onTap: () => setState(() {
+                  priceReceived += 100000;
+                  txtPrice.text = priceReceived.toInt().toString();
+                }),
+                child: const Chip(label: Text("100.000đ")),
+              ),
+              InkWell(
+                onTap: () => setState(() {
+                  priceReceived += 50000;
+                  txtPrice.text = priceReceived.toInt().toString();
+                }),
+                child: const Chip(label: Text("50.000đ")),
+              ),
+              InkWell(
+                onTap: () => setState(() {
+                  priceReceived += 20000;
+                  txtPrice.text = priceReceived.toInt().toString();
+                }),
+                child: const Chip(label: Text("20.000đ")),
+              ),
+              InkWell(
+                onTap: () => setState(() {
+                  priceReceived += 10000;
+                  txtPrice.text = priceReceived.toInt().toString();
+                }),
+                child: const Chip(label: Text("10.000đ")),
+              ),
+              InkWell(
+                onTap: () => setState(() {
+                  priceReceived += 5000;
+                  txtPrice.text = priceReceived.toInt().toString();
+                }),
+                child: const Chip(label: Text("5.000đ")),
+              ),
+              InkWell(
+                onTap: () => setState(() {
+                  priceReceived += 2000;
+                  txtPrice.text = priceReceived.toInt().toString();
+                }),
+                child: const Chip(label: Text("2.000đ")),
+              ),
+              InkWell(
+                onTap: () => setState(() {
+                  priceReceived += 1000;
+                  txtPrice.text = priceReceived.toInt().toString();
+                }),
+                child: const Chip(label: Text("1.000đ")),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Input(
+            inputType: TextInputType.number,
+            inputController: txtPrice,
+            clearBtn: () {
+              txtPrice.clear();
+              setState(() {
+                activeBtn = false;
+                priceReceived = 0;
+              });
+            },
+            onChanged: (p0) {
+              try {
+                setState(() {
+                  priceReceived = double.parse(p0.toString());
+                  // activeBtn = priceReceived >= widget.order.totalPrice!;
+                });
+              } catch (e) {
+                priceReceived = 0;
+                setState(() {
+                  activeBtn = false;
+                });
+              }
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: SwipeButton.expand(
+            thumb: const Icon(
+              Icons.double_arrow_rounded,
+              color: Colors.white,
+            ),
+            enabled: activeBtn,
+            activeThumbColor: context.theme.primaryColor,
+            activeTrackColor: Colors.grey.shade300,
+            onSwipe: () async {
+              showDialog(
+                context: context,
+                builder: (context) => Center(
+                  child: LoadingWidget(
+                    size: 60,
+                  ),
+                ),
+              );
+              await appController
+                  .updateOrderStatus(orderId: widget.order.id!, status: "4")
+                  .then((value) async {
+                await appController.triggerOrderLoad();
+
+                Get.back();
+                Get.back();
+              });
+            },
+            child: Text(
+              "Đã nhận đủ tiền, hoàn thành đơn",
+              style: context.textTheme.titleSmall,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
