@@ -529,190 +529,225 @@ class _ConfirmExchangePriceState extends State<ConfirmExchangePrice> {
   @override
   Widget build(BuildContext context) {
     final font = appController.fontSize;
-    final theme = context.theme;
+    if (widget.order.paymentMethodId == 0) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: SwipeButton.expand(
+          thumb: const Icon(
+            Icons.double_arrow_rounded,
+            color: Colors.white,
+          ),
+          enabled: true,
+          activeThumbColor: context.theme.primaryColor,
+          activeTrackColor: Colors.grey.shade300,
+          onSwipe: () async {
+            showDialog(
+              context: context,
+              builder: (context) => Center(
+                child: LoadingWidget(
+                  size: 60,
+                ),
+              ),
+            );
+            await appController
+                .updateOrderStatus(orderId: widget.order.id!, status: "4")
+                .then((value) async {
+              await appController.triggerOrderLoad();
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: SizedBox(
-            width: Get.width,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                AutoSizeText(
-                  "Tổng tiền thu:",
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontSize: font.value,
+              Get.back();
+              Get.back();
+            });
+          },
+          child: Text(
+            "Khách đã nhận hàng, hoàn thành đơn",
+            style: context.textTheme.titleSmall,
+          ),
+        ),
+      );
+    } else {
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SizedBox(
+              width: Get.width,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  AutoSizeText(
+                    "Tổng tiền thu:",
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: font.value,
+                    ),
                   ),
+                  AutoSizeText(
+                    widget.order.totalPrice!.convertCurrentcy(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SizedBox(
+              width: Get.width,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  AutoSizeText(
+                    "Tiền cần thối:",
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: font.value,
+                    ),
+                  ),
+                  AutoSizeText(
+                    exChangePrice().convertCurrentcy(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 50,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              itemExtent: Get.width * .28,
+              children: [
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      priceReceived += 500000;
+                      txtPrice.text = priceReceived.toInt().toString();
+                    });
+                  },
+                  child: const Chip(label: Text("500.000đ")),
                 ),
-                AutoSizeText(
-                  widget.order.totalPrice!.convertCurrentcy(),
+                InkWell(
+                  onTap: () => setState(() {
+                    setState(() {
+                      priceReceived += 200000;
+                      txtPrice.text = priceReceived.toInt().toString();
+                    });
+                  }),
+                  child: const Chip(label: Text("200.000đ")),
+                ),
+                InkWell(
+                  onTap: () => setState(() {
+                    priceReceived += 100000;
+                    txtPrice.text = priceReceived.toInt().toString();
+                  }),
+                  child: const Chip(label: Text("100.000đ")),
+                ),
+                InkWell(
+                  onTap: () => setState(() {
+                    priceReceived += 50000;
+                    txtPrice.text = priceReceived.toInt().toString();
+                  }),
+                  child: const Chip(label: Text("50.000đ")),
+                ),
+                InkWell(
+                  onTap: () => setState(() {
+                    priceReceived += 20000;
+                    txtPrice.text = priceReceived.toInt().toString();
+                  }),
+                  child: const Chip(label: Text("20.000đ")),
+                ),
+                InkWell(
+                  onTap: () => setState(() {
+                    priceReceived += 10000;
+                    txtPrice.text = priceReceived.toInt().toString();
+                  }),
+                  child: const Chip(label: Text("10.000đ")),
+                ),
+                InkWell(
+                  onTap: () => setState(() {
+                    priceReceived += 5000;
+                    txtPrice.text = priceReceived.toInt().toString();
+                  }),
+                  child: const Chip(label: Text("5.000đ")),
+                ),
+                InkWell(
+                  onTap: () => setState(() {
+                    priceReceived += 2000;
+                    txtPrice.text = priceReceived.toInt().toString();
+                  }),
+                  child: const Chip(label: Text("2.000đ")),
+                ),
+                InkWell(
+                  onTap: () => setState(() {
+                    priceReceived += 1000;
+                    txtPrice.text = priceReceived.toInt().toString();
+                  }),
+                  child: const Chip(label: Text("1.000đ")),
                 ),
               ],
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: SizedBox(
-            width: Get.width,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                AutoSizeText(
-                  "Tiền cần thối:",
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontSize: font.value,
-                  ),
-                ),
-                AutoSizeText(
-                  exChangePrice().convertCurrentcy(),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 50,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            itemExtent: Get.width * .28,
-            children: [
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    priceReceived += 500000;
-                    txtPrice.text = priceReceived.toInt().toString();
-                  });
-                },
-                child: const Chip(label: Text("500.000đ")),
-              ),
-              InkWell(
-                onTap: () => setState(() {
-                  setState(() {
-                    priceReceived += 200000;
-                    txtPrice.text = priceReceived.toInt().toString();
-                  });
-                }),
-                child: const Chip(label: Text("200.000đ")),
-              ),
-              InkWell(
-                onTap: () => setState(() {
-                  priceReceived += 100000;
-                  txtPrice.text = priceReceived.toInt().toString();
-                }),
-                child: const Chip(label: Text("100.000đ")),
-              ),
-              InkWell(
-                onTap: () => setState(() {
-                  priceReceived += 50000;
-                  txtPrice.text = priceReceived.toInt().toString();
-                }),
-                child: const Chip(label: Text("50.000đ")),
-              ),
-              InkWell(
-                onTap: () => setState(() {
-                  priceReceived += 20000;
-                  txtPrice.text = priceReceived.toInt().toString();
-                }),
-                child: const Chip(label: Text("20.000đ")),
-              ),
-              InkWell(
-                onTap: () => setState(() {
-                  priceReceived += 10000;
-                  txtPrice.text = priceReceived.toInt().toString();
-                }),
-                child: const Chip(label: Text("10.000đ")),
-              ),
-              InkWell(
-                onTap: () => setState(() {
-                  priceReceived += 5000;
-                  txtPrice.text = priceReceived.toInt().toString();
-                }),
-                child: const Chip(label: Text("5.000đ")),
-              ),
-              InkWell(
-                onTap: () => setState(() {
-                  priceReceived += 2000;
-                  txtPrice.text = priceReceived.toInt().toString();
-                }),
-                child: const Chip(label: Text("2.000đ")),
-              ),
-              InkWell(
-                onTap: () => setState(() {
-                  priceReceived += 1000;
-                  txtPrice.text = priceReceived.toInt().toString();
-                }),
-                child: const Chip(label: Text("1.000đ")),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Input(
-            inputType: TextInputType.number,
-            inputController: txtPrice,
-            clearBtn: () {
-              txtPrice.clear();
-              setState(() {
-                activeBtn = false;
-                priceReceived = 0;
-              });
-            },
-            onChanged: (p0) {
-              try {
-                setState(() {
-                  priceReceived = double.parse(p0.toString());
-                  // activeBtn = priceReceived >= widget.order.totalPrice!;
-                });
-              } catch (e) {
-                priceReceived = 0;
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Input(
+              inputType: TextInputType.number,
+              inputController: txtPrice,
+              clearBtn: () {
+                txtPrice.clear();
                 setState(() {
                   activeBtn = false;
+                  priceReceived = 0;
                 });
-              }
-            },
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: SwipeButton.expand(
-            thumb: const Icon(
-              Icons.double_arrow_rounded,
-              color: Colors.white,
+              },
+              onChanged: (p0) {
+                try {
+                  setState(() {
+                    priceReceived = double.parse(p0.toString());
+                    // activeBtn = priceReceived >= widget.order.totalPrice!;
+                  });
+                } catch (e) {
+                  priceReceived = 0;
+                  setState(() {
+                    activeBtn = false;
+                  });
+                }
+              },
             ),
-            enabled: activeBtn,
-            activeThumbColor: context.theme.primaryColor,
-            activeTrackColor: Colors.grey.shade300,
-            onSwipe: () async {
-              showDialog(
-                context: context,
-                builder: (context) => Center(
-                  child: LoadingWidget(
-                    size: 60,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: SwipeButton.expand(
+              thumb: const Icon(
+                Icons.double_arrow_rounded,
+                color: Colors.white,
+              ),
+              enabled: activeBtn,
+              activeThumbColor: context.theme.primaryColor,
+              activeTrackColor: Colors.grey.shade300,
+              onSwipe: () async {
+                showDialog(
+                  context: context,
+                  builder: (context) => Center(
+                    child: LoadingWidget(
+                      size: 60,
+                    ),
                   ),
-                ),
-              );
-              await appController
-                  .updateOrderStatus(orderId: widget.order.id!, status: "4")
-                  .then((value) async {
-                await appController.triggerOrderLoad();
+                );
+                await appController
+                    .updateOrderStatus(orderId: widget.order.id!, status: "4")
+                    .then((value) async {
+                  await appController.triggerOrderLoad();
 
-                Get.back();
-                Get.back();
-              });
-            },
-            child: Text(
-              "Đã nhận đủ tiền, hoàn thành đơn",
-              style: context.textTheme.titleSmall,
+                  Get.back();
+                  Get.back();
+                });
+              },
+              child: Text(
+                "Đã nhận đủ tiền, hoàn thành đơn",
+                style: context.textTheme.titleSmall,
+              ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    }
   }
 }
