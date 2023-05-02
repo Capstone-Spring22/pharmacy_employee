@@ -7,6 +7,7 @@ import 'package:get/get_rx/src/rx_workers/utils/debouncer.dart';
 import 'package:pharmacy_employee/constant/controller.dart';
 import 'package:pharmacy_employee/helpers/input.dart';
 import 'package:pharmacy_employee/helpers/loading.dart';
+import 'package:pharmacy_employee/helpers/showSnack.dart';
 import 'package:pharmacy_employee/main.dart';
 import 'package:pharmacy_employee/models/order_detail.dart';
 import 'package:pharmacy_employee/service/app_service.dart';
@@ -738,6 +739,11 @@ class _ConfirmExchangePriceState extends State<ConfirmExchangePrice> {
 
                   Get.back();
                   Get.back();
+                  showSnack(
+                    'Thông báo',
+                    'Hoàn thành đơn hàng',
+                    SnackType.success,
+                  );
                 });
               },
               child: Text(

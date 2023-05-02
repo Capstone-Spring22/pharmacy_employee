@@ -157,8 +157,8 @@ class AppController extends GetxController {
   }
 
   void logout() {
-    pharmacist.value = Pharmacist();
     Get.offAllNamed('/login');
+    pharmacist.value = Pharmacist();
   }
 
   Map<String, dynamic> pharmaTokenDecode() =>
