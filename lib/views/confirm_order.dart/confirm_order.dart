@@ -287,41 +287,80 @@ class _ConfirmOrderScreenState extends State<ConfirmOrderScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                    child: SwipeButton.expand(
-                      enabled: orderAction!.canAccept!,
-                      thumb: const Icon(
-                        Icons.double_arrow_rounded,
-                        color: Colors.white,
-                      ),
-                      activeThumbColor: context.theme.primaryColor,
-                      activeTrackColor: Colors.grey[300],
-                      onSwipe: () async {
-                        if (order.pharmacistId == null) {
-                          await showDig(true);
-                        }
-                      },
-                      child: Text(
-                        "Nhận đơn này",
-                        style: txtTheme.headlineSmall,
+                    // child: SwipeButton.expand(
+                    //   enabled: orderAction!.canAccept!,
+                    //   thumb: const Icon(
+                    //     Icons.double_arrow_rounded,
+                    //     color: Colors.white,
+                    //   ),
+                    //   activeThumbColor: context.theme.primaryColor,
+                    //   activeTrackColor: Colors.grey[300],
+                    //   onSwipe: () async {
+                    //     if (order.pharmacistId == null) {
+                    //       await showDig(true);
+                    //     }
+                    //   },
+                    //   child: Text(
+                    //     "Nhận đơn này",
+                    //     style: txtTheme.headlineSmall,
+                    //   ),
+                    // ),
+                    child: SizedBox(
+                      width: Get.width * .8,
+                      child: FilledButton(
+                        onPressed: orderAction!.canAccept!
+                            ? () async {
+                                if (order.pharmacistId == null) {
+                                  await showDig(true);
+                                }
+                              }
+                            : null,
+                        child: Text(
+                          "Nhận đơn này",
+                          style: txtTheme.headlineSmall!.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                    child: SwipeButton.expand(
-                      enabled: order.actionStatus!.canAccept!,
-                      thumb: const Icon(
-                        Icons.double_arrow_rounded,
-                        color: Colors.white,
-                      ),
-                      activeThumbColor: context.theme.colorScheme.error,
-                      activeTrackColor: Colors.grey.shade300,
-                      onSwipe: () async {
-                        await showDig(false);
-                      },
-                      child: Text(
-                        "Từ chối đơn hàng",
-                        style: context.textTheme.headlineSmall,
+                    // child: SwipeButton.expand(
+                    //   enabled: order.actionStatus!.canAccept!,
+                    //   thumb: const Icon(
+                    //     Icons.double_arrow_rounded,
+                    //     color: Colors.white,
+                    //   ),
+                    //   activeThumbColor: context.theme.colorScheme.error,
+                    //   activeTrackColor: Colors.grey.shade300,
+                    //   onSwipe: () async {
+                    //     await showDig(false);
+                    //   },
+                    //   child: Text(
+                    //     "Từ chối đơn hàng",
+                    //     style: context.textTheme.headlineSmall,
+                    //   ),
+                    // ),
+                    child: SizedBox(
+                      width: Get.width * .8,
+                      child: FilledButton(
+                        onPressed: order.actionStatus!.canAccept!
+                            ? () async {
+                                await showDig(false);
+                              }
+                            : null,
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(
+                            Colors.red,
+                          ),
+                        ),
+                        child: Text(
+                          "Từ chối đơn hàng",
+                          style: txtTheme.headlineSmall!.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),
