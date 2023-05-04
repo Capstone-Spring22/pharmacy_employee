@@ -339,10 +339,10 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                         activeThumbColor: context.theme.primaryColor,
                         activeTrackColor: Colors.grey[300],
                         onSwipe: () {
-                          // appController.updateOrderStatus(
-                          //   orderId: orders[i]!.id!,
-                          //   status: "8",
-                          // );
+                          appController.updateOrderStatus(
+                            orderId: orders[i]!.id!,
+                            status: "8",
+                          );
                           appController.orderProcessList.removeWhere(
                               (element) => element == orders[i]!.id);
                           // addressList.removeAt(i);
