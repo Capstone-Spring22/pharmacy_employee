@@ -64,14 +64,16 @@ class DeliveryButton extends StatelessWidget {
             );
           }
 
-          Get.off(() => PrepDeliveryScreen(
-                addressList: addressList,
-                mapData: osrmMapData,
-                legList: legList,
-                locationList: locationList,
-                orders: orderDetails,
-                currentPosition: currentPosition!,
-              ));
+          Get.off(
+            () => PrepDeliveryScreen(
+              addressList: addressList,
+              mapData: osrmMapData,
+              legList: legList,
+              locationList: locationList,
+              orders: orderDetails,
+              currentPosition: currentPosition!,
+            ),
+          );
         },
         child: Text(
           isCompletePrep

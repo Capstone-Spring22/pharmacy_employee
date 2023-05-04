@@ -78,6 +78,7 @@ class AppService {
     bool isAccept,
     bool isOnlyPharmacist, {
     int count = 10,
+    bool isCompleted = false,
   }) async {
     try {
       var res = await dio.get(
@@ -86,6 +87,7 @@ class AppService {
           'NotAcceptable': isAccept,
           'pageIndex': page,
           'pageItems': count,
+          'isCompleted': false,
           'ShowOnlyPharmacist': isOnlyPharmacist,
         },
         options: appController.options,
@@ -384,12 +386,12 @@ class AppService {
   Future<Map<String, dynamic>?> orderLookup(
       String searchQuery, int page, bool isCompleted) async {
     try {
+      Get.log(appController.options!.headers.toString());
       var res = await dio.get(
         '${api}Order',
         options: appController.options,
         queryParameters: {
           'OrderIdOrPhoneNo': searchQuery,
-          'isCompleted': isCompleted,
           'pageIndex': page,
           'pageItems': 10,
         },

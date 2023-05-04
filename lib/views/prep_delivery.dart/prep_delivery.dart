@@ -49,6 +49,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
   late List<String> addressList;
   late List<Location> locationList;
   late List<Leg> legList;
+  final List<Color> _color = [];
   final Set<Marker> _markers = {};
   bool isQueryRoute = false;
   bool isFinished = false;
@@ -64,11 +65,13 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     super.initState();
     orders = widget.orders;
     mapData = widget.mapData;
-    addressList = widget.addressList;
+    // addressList = widget.addressList;
     locationList = widget.locationList;
     legList = widget.legList;
     getRouteFastest();
   }
+
+  String getAddress(int i) => orders[i]!.orderDelivery!.fullyAddress!;
 
   getRouteBySort() async {
     setState(() {
@@ -117,6 +120,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     setState(() {
       isQueryRoute = true;
     });
+
     _markers.clear();
     _markers.add(Marker(
       markerId: const MarkerId('Vị trí hiện tại'),
@@ -129,10 +133,10 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     for (int i = 0; i < locationList.length; i++) {
       _markers.add(
         Marker(
-          markerId: MarkerId(addressList[i]),
+          markerId: MarkerId(getAddress(i)),
           position: LatLng(locationList[i].latitude, locationList[i].longitude),
           infoWindow: InfoWindow(
-            title: addressList[i],
+            title: getAddress(i),
           ),
         ),
       );
@@ -146,8 +150,10 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     for (final i in mapData['waypoints']) {
       wayPointList.add(Waypoint.fromJson(i));
     }
+    locationList = rearrangeLocationList(locationList, wayPointList);
 
-    orders = rearrangeList(orders, wayPointList);
+    // orders = rearrangeList(widget.orders, wayPointList);
+    orders = widget.orders;
 
     legList.clear();
     for (var itm in mapData['trips'][0]['legs']) {
@@ -157,6 +163,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     _polylines.clear();
 
     for (var e in legList) {
+      Get.log("dis: ${e.distance} - dur: ${e.duration} - sum: ${e.summary}");
       List<PolylinePoint> poly = [];
       for (var ele in e.steps!) {
         poly.addAll(AppService.decodePolyline(ele.geometry!));
@@ -212,12 +219,14 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50.0));
   }
 
-  void orderAction(int i, num totalPrice) {
+  void orderAction(int i, num totalPrice, bool isPreorder) {
     TextEditingController txt = TextEditingController();
     TextEditingController moneyTxt = TextEditingController();
     final formKey = GlobalKey<FormState>();
     final formMoney = GlobalKey<FormState>();
     Rx<num> change = 0.0.obs;
+
+    Get.log('isPreorder: $isPreorder');
 
     RxBool receiveMoney = false.obs;
     showModalBottomSheet(
@@ -242,105 +251,117 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                 shrinkWrap: true,
                 // mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              'Tổng tiền: ',
-                              style: context.textTheme.bodyLarge,
-                            ),
-                            const Spacer(),
-                            Text(
-                              totalPrice.convertCurrentcy(),
-                              style: context.textTheme.bodyLarge,
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              'Tiền thối:',
-                              style: context.textTheme.bodyLarge,
-                            ),
-                            const Spacer(),
-                            Obx(
-                              () => Text(
-                                change.value.convertCurrentcy(),
+                  if (isPreorder)
+                    const Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: AutoSizeText('Khách đã thanh toán trước'),
+                    ),
+                  if (!isPreorder)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Tổng tiền: ',
                                 style: context.textTheme.bodyLarge,
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              const Spacer(),
+                              Text(
+                                totalPrice.convertCurrentcy(),
+                                style: context.textTheme.bodyLarge,
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                'Tiền thối:',
+                                style: context.textTheme.bodyLarge,
+                              ),
+                              const Spacer(),
+                              Obx(
+                                () => Text(
+                                  change.value.convertCurrentcy(),
+                                  style: context.textTheme.bodyLarge,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Form(
-                    key: formMoney,
-                    child: Input(
-                      inputController: moneyTxt,
-                      title: 'Nhận tiền',
-                      inputType: TextInputType.number,
-                      maxLines: 1,
-                      txtHeight: 80,
-                      isFormField: true,
-                      validator: (p0) => p0!.isEmpty
-                          ? 'Nhập tiền'
-                          : p0.isNumericOnly
-                              ? num.parse(p0) < totalPrice
-                                  ? 'Tiền nhận phải cao hơn hoặc bằng tổng tiền'
-                                  : null
-                              : 'Nhập số',
-                      onChanged: (v) {
-                        if (formMoney.currentState!.validate()) {
-                          change.value = num.parse(v) - totalPrice;
-                          if (change.value >= 0) {
-                            receiveMoney.value = true;
-                          } else {}
-                        } else {
-                          receiveMoney.value = false;
-                        }
-                      },
+                  if (!isPreorder)
+                    Form(
+                      key: formMoney,
+                      child: Input(
+                        inputController: moneyTxt,
+                        title: 'Nhận tiền',
+                        inputType: TextInputType.number,
+                        maxLines: 1,
+                        txtHeight: 80,
+                        isFormField: true,
+                        validator: (p0) => p0!.isEmpty
+                            ? 'Nhập tiền'
+                            : p0.isNumericOnly
+                                ? num.parse(p0) < totalPrice
+                                    ? 'Tiền nhận phải cao hơn hoặc bằng tổng tiền'
+                                    : null
+                                : 'Nhập số',
+                        onChanged: (v) {
+                          if (formMoney.currentState!.validate()) {
+                            change.value = num.parse(v) - totalPrice;
+                            if (change.value >= 0) {
+                              receiveMoney.value = true;
+                            } else {}
+                          } else {
+                            receiveMoney.value = false;
+                          }
+                        },
+                      ),
                     ),
-                  ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Obx(() => SwipeButton.expand(
-                          enabled: receiveMoney.value,
-                          thumb: const Icon(
-                            Icons.double_arrow_rounded,
-                            color: Colors.white,
-                          ),
-                          activeThumbColor: context.theme.primaryColor,
-                          activeTrackColor: Colors.grey[300],
-                          onSwipe: () {
-                            appController.updateOrderStatus(
-                              orderId: orders[i]!.id!,
-                              status: "8",
-                            );
-                            appController.orderProcessList.removeWhere(
-                                (element) => element == orders[i]!.id);
-                            addressList.removeAt(i);
-                            locationList.removeAt(i);
-                            orders.removeAt(i);
-                            appController.triggerOrderLoad();
-                            setState(() {
-                              if (orders.isEmpty &&
-                                  appController.orderProcessList.isEmpty) {
-                                isFinished = true;
-                              } else {
-                                selectedValue == 0
-                                    ? getRouteFastest()
-                                    : getRouteBySort();
-                              }
-                            });
-                            Get.back();
-                          },
-                          child: const Text("Hoàn thành đơn hàng"),
-                        )),
+                    child: Obx(() {
+                      if (isPreorder) {
+                        receiveMoney.value = true;
+                      }
+                      return SwipeButton.expand(
+                        enabled: receiveMoney.value,
+                        thumb: const Icon(
+                          Icons.double_arrow_rounded,
+                          color: Colors.white,
+                        ),
+                        activeThumbColor: context.theme.primaryColor,
+                        activeTrackColor: Colors.grey[300],
+                        onSwipe: () {
+                          appController.updateOrderStatus(
+                            orderId: orders[i]!.id!,
+                            status: "8",
+                          );
+                          appController.orderProcessList.removeWhere(
+                              (element) => element == orders[i]!.id);
+                          // addressList.removeAt(i);
+                          locationList.removeAt(i);
+                          orders.removeAt(i);
+                          appController.triggerOrderLoad();
+                          setState(() {
+                            if (orders.isEmpty &&
+                                appController.orderProcessList.isEmpty) {
+                              isFinished = true;
+                            } else {
+                              selectedValue == 0
+                                  ? getRouteFastest()
+                                  : getRouteBySort();
+                            }
+                          });
+                          Get.back();
+                        },
+                        child: const Text("Hoàn thành đơn hàng"),
+                      );
+                    }),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5),
@@ -394,7 +415,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                           appController.orderProcessList.removeWhere(
                             (element) => element == orders[i]!.id,
                           );
-                          addressList.removeAt(i);
+                          // addressList.removeAt(i);
                           locationList.removeAt(i);
                           orders.removeAt(i);
                           appController.triggerOrderLoad();
@@ -440,7 +461,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                           appController.orderProcessList.removeWhere(
                             (element) => element == orders[i]!.id,
                           );
-                          addressList.removeAt(i);
+                          // addressList.removeAt(i);
                           locationList.removeAt(i);
                           orders.removeAt(i);
                           appController.triggerOrderLoad();
@@ -544,6 +565,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                         totalSwitches: 2,
                         labels: routeSettingList,
                         onToggle: (index) {
+                          Get.log(locationList.toString());
                           selectedValue = index;
                         },
                         cornerRadius: 20.0,
@@ -609,9 +631,9 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                                   final itemOrder = orders.removeAt(oldIndex);
                                   orders.insert(newIndex, itemOrder);
 
-                                  final itemAddress =
-                                      addressList.removeAt(oldIndex);
-                                  addressList.insert(newIndex, itemAddress);
+                                  // final itemAddress =
+                                  //     addressList.removeAt(oldIndex);
+                                  // addressList.insert(newIndex, itemAddress);
 
                                   final itemLeg = legList.removeAt(oldIndex);
                                   legList.insert(newIndex, itemLeg);
@@ -619,6 +641,8 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                                   final itemLocation =
                                       locationList.removeAt(oldIndex);
                                   locationList.insert(newIndex, itemLocation);
+
+                                  Get.log(itemLocation.toString());
                                 });
                               },
                               children: [
@@ -642,22 +666,25 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                                           ],
                                         ),
                                         child: OrderTileDelivery(
-                                          address: addressList[i],
-                                          distance: legList
-                                                      .map((e) => e.distance)
-                                                      .take(i)
-                                                      .toList()
-                                                      .length >
-                                                  1
-                                              ? legList
-                                                  .map((e) => e.distance)
-                                                  .take(i)
-                                                  .reduce((value, element) =>
-                                                      value! + element!)!
-                                                  .toKilometers()
-                                              : legList[i]
-                                                  .distance!
-                                                  .toKilometers(),
+                                          address: getAddress(i),
+                                          // distance: legList
+                                          //             .map((e) => e.distance)
+                                          //             .take(i)
+                                          //             .toList()
+                                          //             .length >
+                                          //         1
+                                          //     ? legList
+                                          //         .map((e) => e.distance)
+                                          //         .take(i)
+                                          //         .reduce((value, element) =>
+                                          //             value! + element!)!
+                                          //         .toKilometers()
+                                          //     : legList[i]
+                                          //         .distance!
+                                          //         .toKilometers(),
+                                          distance: legList[i]
+                                              .distance!
+                                              .toKilometers(),
                                           i: i,
                                           orders: orders,
                                           orderAction: orderAction,

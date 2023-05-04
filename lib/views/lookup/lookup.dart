@@ -86,9 +86,7 @@ class _ProductLookupState extends State<ProductLookup> {
           var list = controller.productList;
           if (controller.isLoading.isTrue && list.isEmpty) {
             return Center(
-              child: LoadingWidget(
-                size: 60,
-              ),
+              child: LoadingWidget(size: 60),
             );
           } else if (controller.isLoading.isFalse && list.isEmpty) {
             return const Center(
