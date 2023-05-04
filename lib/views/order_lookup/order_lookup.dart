@@ -22,9 +22,11 @@ class OrderLookUpScreen extends StatefulWidget {
 
 class _OrderLookUpScreenState extends State<OrderLookUpScreen> {
   final TextEditingController _txtSearch = TextEditingController();
+  ScrollController pageScrollController = ScrollController();
   List<OrderHistory> orderList = [];
 
   bool _isLoading = false;
+  bool _isLoadMore = false;
   bool _isSearch = false;
   bool _haveNext = false;
 
@@ -35,17 +37,42 @@ class _OrderLookUpScreenState extends State<OrderLookUpScreen> {
 
   final debouncer = Debouncer(delay: 300.ms);
 
-  Future _fetchList() async {
-    setState(() {
-      _isLoading = true;
+  @override
+  void initState() {
+    _fetchList();
+    super.initState();
+    pageScrollController.addListener(() {
+      if (pageScrollController.position.pixels ==
+          pageScrollController.position.maxScrollExtent) {
+        if (_haveNext) {
+          Get.log("FETCH MORE");
+          _page++;
+          _fetchList();
+        }
+      }
     });
+  }
+
+  Future _fetchList() async {
+    if (_page > 1) {
+      setState(() {
+        _isLoadMore = true;
+      });
+    } else {
+      setState(() {
+        _isLoading = true;
+      });
+    }
     List<OrderHistory> tempList = [];
 
     _haveNext ? _page++ : _page = 1;
-
-    final res =
-        await AppService().orderLookup(_txtSearch.text, _page, _isCompleted);
-    Get.log('Order Lookup: $res');
+    Map<String, dynamic>? res;
+    if (_txtSearch.text.isEmpty) {
+      res = await AppService().orderLookup('', _page, _isCompleted);
+    } else {
+      res =
+          await AppService().orderLookup(_txtSearch.text, _page, _isCompleted);
+    }
     if (res != null) {
       _haveNext = res['hasNextPage'];
       for (final item in res['items']) {
@@ -54,11 +81,21 @@ class _OrderLookUpScreenState extends State<OrderLookUpScreen> {
       }
     }
 
-    orderList = tempList;
+    if (_page > 1) {
+      orderList.addAll(tempList);
+    } else {
+      orderList = tempList;
+    }
 
-    setState(() {
-      _isLoading = false;
-    });
+    if (_page > 1) {
+      setState(() {
+        _isLoadMore = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -125,8 +162,16 @@ class _OrderLookUpScreenState extends State<OrderLookUpScreen> {
                   child: Text('Nhập thông tin để tìm kiếm'),
                 )
               : ListView.builder(
-                  itemCount: orderList.length,
+                  controller: pageScrollController,
+                  itemCount: orderList.length + 1,
                   itemBuilder: (context, index) {
+                    if (index == orderList.length) {
+                      return _isLoadMore && _haveNext
+                          ? Center(
+                              child: LoadingWidget(),
+                            )
+                          : const SizedBox();
+                    }
                     final item = orderList[index];
                     bool dif = dateRender == item.createdDate!.convertToDate;
                     if (!dif) {
