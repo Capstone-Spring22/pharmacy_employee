@@ -397,7 +397,7 @@ class _PrepOrderState extends State<PrepOrder> {
                       addressList: addressList,
                       osrmMapData: osrmMapData,
                       legList: legList,
-                      locationList: locationList,
+                      locationList: List.from(locationList),
                       currentPosition: currentPosition,
                       totalProduct: totalProduct,
                       finished: finished,

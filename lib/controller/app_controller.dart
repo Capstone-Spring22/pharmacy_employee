@@ -216,18 +216,20 @@ class AppController extends GetxController {
     bool isNew = false,
     bool isOnlyPharmacist = false,
   }) async {
-    switch (type) {
-      case "unAccept":
-        isUnAcceptLoading.value = true;
-        break;
-      case "active":
-        isActiveLoading.value = true;
-        break;
-      case "cantAccept":
-        isCantAcceptLoading.value = true;
-        break;
-      default:
-    }
+    try {
+      switch (type) {
+        case "unAccept":
+          isUnAcceptLoading.value = true;
+          break;
+        case "active":
+          isActiveLoading.value = true;
+          break;
+        case "cantAccept":
+          isCantAcceptLoading.value = true;
+          break;
+        default:
+      }
+    } catch (e) {}
 
     final result =
         await AppService().fetchOrder(page, isAccept, isOnlyPharmacist);

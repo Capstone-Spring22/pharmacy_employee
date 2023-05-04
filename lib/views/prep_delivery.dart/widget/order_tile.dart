@@ -17,7 +17,8 @@ class OrderTileDelivery extends StatelessWidget {
       required this.total,
       required this.orders,
       required this.i,
-      required this.orderAction});
+      required this.orderAction,
+      required this.color});
 
   final String address;
   final String distance;
@@ -27,18 +28,28 @@ class OrderTileDelivery extends StatelessWidget {
   final List<OrderHistoryDetail?> orders;
   final int i;
   final Function orderAction;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return ExpansionTile(
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Địa chỉ: $address"),
-          Text(
-            "Khoảng cách: $distance",
-          ),
-        ],
+      title: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.alt_route,
+              color: color,
+              size: 30,
+            ),
+          ],
+        ),
+        title: Text("Địa chỉ: $address"),
+        subtitle: Text(
+          "Khoảng cách: $distance",
+        ),
+        minLeadingWidth: Get.width * .05,
       ),
       children: [
         DetailContent(

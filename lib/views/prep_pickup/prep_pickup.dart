@@ -409,10 +409,10 @@ class PickupOrderPrepButton extends StatelessWidget {
 
           appController.orderProcessList.clear();
           appController.isProcessMode.value = false;
-          await appController.triggerOrderLoad();
-
-          Get.offNamedUntil(
-              '/order_view', (route) => route.settings.name == '/order_view');
+          await appController.triggerOrderLoad().then((value) {
+            Get.offNamedUntil(
+                '/order_view', (route) => route.settings.name == '/order_view');
+          });
 
           showSnack('Thông báo', 'Chuẩn bị hàng thành công, đợi khách đến lấy',
               SnackType.success);

@@ -41,6 +41,17 @@ List<Location> rearrangeLocationList(
   return rearrangedList;
 }
 
+List<Color> genColorList(int count) {
+  List<Color> colorList = [];
+  while (colorList.length < count) {
+    Color color = getRandomBrightColor();
+    if (!colorList.contains(color)) {
+      colorList.add(color);
+    }
+  }
+  return colorList;
+}
+
 Color getRandomBrightColor() {
   // Define a list of common bright colors
   List<Color> brightColors = [

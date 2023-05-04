@@ -64,6 +64,8 @@ class DeliveryButton extends StatelessWidget {
             );
           }
 
+          Get.back();
+
           Get.off(
             () => PrepDeliveryScreen(
               addressList: addressList,

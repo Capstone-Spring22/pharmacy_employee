@@ -49,8 +49,9 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
   late List<String> addressList;
   late List<Location> locationList;
   late List<Leg> legList;
-  final List<Color> _color = [];
+  late final List<Color> _colors;
   final Set<Marker> _markers = {};
+  late final List<OrderHistoryDetail?> stockList;
   bool isQueryRoute = false;
   bool isFinished = false;
   bool isQueryRouteBack = false;
@@ -64,14 +65,18 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
   void initState() {
     super.initState();
     orders = widget.orders;
+    stockList = List.from(widget.orders);
     mapData = widget.mapData;
     // addressList = widget.addressList;
+    _colors = genColorList(widget.orders.length);
     locationList = widget.locationList;
     legList = widget.legList;
     getRouteFastest();
   }
 
-  String getAddress(int i) => orders[i]!.orderDelivery!.fullyAddress!;
+  String getAddress(int i) {
+    return orders[i]!.orderDelivery!.fullyAddress!;
+  }
 
   getRouteBySort() async {
     setState(() {
@@ -101,7 +106,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
         polylineId: PolylineId(e.summary!),
         visible: true,
         points: routePoints,
-        color: getRandomBrightColor(),
+        color: _colors[legList.indexOf(e)],
         width: 4,
       ));
     }
@@ -120,7 +125,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     setState(() {
       isQueryRoute = true;
     });
-
+    orders = List.from(stockList);
     _markers.clear();
     _markers.add(Marker(
       markerId: const MarkerId('Vị trí hiện tại'),
@@ -153,7 +158,6 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     locationList = rearrangeLocationList(locationList, wayPointList);
 
     // orders = rearrangeList(widget.orders, wayPointList);
-    orders = widget.orders;
 
     legList.clear();
     for (var itm in mapData['trips'][0]['legs']) {
@@ -161,9 +165,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
     }
 
     _polylines.clear();
-
     for (var e in legList) {
-      Get.log("dis: ${e.distance} - dur: ${e.duration} - sum: ${e.summary}");
       List<PolylinePoint> poly = [];
       for (var ele in e.steps!) {
         poly.addAll(AppService.decodePolyline(ele.geometry!));
@@ -177,7 +179,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
         polylineId: PolylineId(e.summary!),
         visible: true,
         points: routePoints,
-        color: getRandomBrightColor(),
+        color: _colors[legList.indexOf(e)],
         width: 4,
       ));
     }
@@ -337,20 +339,22 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                         activeThumbColor: context.theme.primaryColor,
                         activeTrackColor: Colors.grey[300],
                         onSwipe: () {
-                          appController.updateOrderStatus(
-                            orderId: orders[i]!.id!,
-                            status: "8",
-                          );
+                          // appController.updateOrderStatus(
+                          //   orderId: orders[i]!.id!,
+                          //   status: "8",
+                          // );
                           appController.orderProcessList.removeWhere(
                               (element) => element == orders[i]!.id);
                           // addressList.removeAt(i);
                           locationList.removeAt(i);
-                          orders.removeAt(i);
+                          stockList.removeAt(i);
                           appController.triggerOrderLoad();
                           setState(() {
-                            if (orders.isEmpty &&
+                            if (stockList.isEmpty &&
                                 appController.orderProcessList.isEmpty) {
                               isFinished = true;
+                              _markers.clear();
+                              _polylines.clear();
                             } else {
                               selectedValue == 0
                                   ? getRouteFastest()
@@ -417,12 +421,15 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                           );
                           // addressList.removeAt(i);
                           locationList.removeAt(i);
-                          orders.removeAt(i);
+
+                          stockList.removeAt(i);
                           appController.triggerOrderLoad();
                           setState(() {
-                            if (orders.isEmpty &&
+                            if (stockList.isEmpty &&
                                 appController.orderProcessList.isEmpty) {
                               isFinished = true;
+                              _markers.clear();
+                              _polylines.clear();
                             } else {
                               selectedValue == 0
                                   ? getRouteFastest()
@@ -463,12 +470,15 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                           );
                           // addressList.removeAt(i);
                           locationList.removeAt(i);
-                          orders.removeAt(i);
+
+                          stockList.removeAt(i);
                           appController.triggerOrderLoad();
                           setState(() {
-                            if (orders.isEmpty &&
+                            if (stockList.isEmpty &&
                                 appController.orderProcessList.isEmpty) {
                               isFinished = true;
+                              _markers.clear();
+                              _polylines.clear();
                             } else {
                               selectedValue == 0
                                   ? getRouteFastest()
@@ -641,8 +651,8 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                                   final itemLocation =
                                       locationList.removeAt(oldIndex);
                                   locationList.insert(newIndex, itemLocation);
-
-                                  Get.log(itemLocation.toString());
+                                  final itemColor = _colors.removeAt(oldIndex);
+                                  _colors.insert(newIndex, itemColor);
                                 });
                               },
                               children: [
@@ -667,6 +677,7 @@ class _PrepDeliveryScreenState extends State<PrepDeliveryScreen> {
                                         ),
                                         child: OrderTileDelivery(
                                           address: getAddress(i),
+                                          color: _colors[i],
                                           // distance: legList
                                           //             .map((e) => e.distance)
                                           //             .take(i)
